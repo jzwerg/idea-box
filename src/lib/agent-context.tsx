@@ -65,7 +65,15 @@ interface AgentCtx {
   status: "idle" | "running";
   runAgent: (opts?: { trigger?: "auto" | "manual"; instructions?: string }) => void;
   registerApply: (fn: AgentApplyFn | null) => void;
+  learnedRules: LearnedRule[];
+  pendingProposals: Proposal[];
+  proposeRule: (p: Omit<Proposal, "id" | "createdAt">) => void;
+  acceptProposal: (id: string, finalRule?: string) => void;
+  dismissProposal: (id: string) => void;
+  toggleLearnedRule: (id: string) => void;
+  removeLearnedRule: (id: string) => void;
 }
+
 
 const Ctx = createContext<AgentCtx | null>(null);
 
