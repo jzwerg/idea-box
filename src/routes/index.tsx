@@ -106,6 +106,56 @@ function SignalDashboard() {
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
   const [userTypeFilter, setUserTypeFilter] = useState<UserType | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("priority");
+  const { weights, registerApply, runs: agentRuns, status: agentStatus } = useAgent();
+
+  // Register the apply callback so the agent can rescore requests
+  useEffect(() => {
+    registerApply(({ instructions, runInstructions }) => {
+      const combined = `${instructions} ${runInstructions ?? ""}`.toLowerCase();
+      // Keyword nudges based on instructions
+      const boosts: Array<{ re: RegExp; field: "impact" | "urgency" | "reach"; amt: number }> = [
+        { re: /enterprise|procurement|sso|fido|okta|azure/i, field: "impact", amt: 8 },
+        { re: /compliance|regulat|amld|deadline|audit/i, field: "urgency", amt: 8 },
+        { re: /revenue|churn|retention|deal/i, field: "impact", amt: 6 },
+        { re: /reach|broad|many clients|quality-of-life/i, field: "reach", amt: 5 },
+      ];
+      let rescored = 0;
+      let topMover: { title: string; delta: number } | undefined;
+      setRequests((rs) =>
+        rs.map((r) => {
+          if (r.status !== "new") return r;
+          const before = compositeWith(r.priority, weights);
+          const next = { ...r.priority };
+          (Object.keys(next) as Array<keyof typeof next>).forEach((k) => {
+            // small jitter so the agent feels alive
+            const jitter = Math.round((Math.random() - 0.5) * 6);
+            next[k] = {
+              ...next[k],
+              value: Math.max(0, Math.min(100, next[k].value + jitter)),
+            };
+          });
+          // apply keyword boosts
+          for (const b of boosts) {
+            if (b.re.test(`${r.title} ${r.description} ${combined}`)) {
+              next[b.field] = {
+                ...next[b.field],
+                value: Math.min(100, next[b.field].value + b.amt),
+              };
+            }
+          }
+          const after = compositeWith(next, weights);
+          const delta = after - before;
+          if (delta !== 0) rescored += 1;
+          if (!topMover || Math.abs(delta) > Math.abs(topMover.delta)) {
+            topMover = { title: r.title, delta };
+          }
+          return { ...r, priority: next };
+        }),
+      );
+      return { rescored, topMover };
+    });
+    return () => registerApply(null);
+  }, [registerApply, weights]);
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
     setRequests((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
