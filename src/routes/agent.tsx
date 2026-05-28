@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -14,9 +15,13 @@ import {
   ArrowLeft,
   CheckCircle2,
   Loader2,
+  GraduationCap,
+  Inbox,
+  Trash2,
+  Plus,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { SignalShell } from "@/components/signal/SignalShell";
 import { useAgent, type Weights } from "@/lib/agent-context";
 
