@@ -67,8 +67,26 @@ const AREAS: ProductArea[] = [
   "Transaction Monitoring",
   "Risk Engine",
   "Client Portal",
-  "Admin Console",
 ];
+
+const USER_TYPES: UserType[] = [
+  "Compliance Officer",
+  "Risk Analyst",
+  "KYC Analyst",
+  "Operations Lead",
+  "Client Admin",
+  "Exec Sponsor",
+];
+
+const USER_TYPE_TONE: Record<UserType, string> = {
+  "Compliance Officer": "border-destructive/40 text-destructive",
+  "Risk Analyst": "border-chart-4/40 text-chart-4",
+  "KYC Analyst": "border-chart-2/40 text-chart-2",
+  "Operations Lead": "border-chart-3/40 text-chart-3",
+  "Client Admin": "border-chart-5/40 text-chart-5",
+  "Exec Sponsor": "border-primary/40 text-primary",
+};
+
 
 type SortKey = "priority" | "frequency" | "confidence" | "created";
 
