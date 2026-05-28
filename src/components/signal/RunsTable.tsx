@@ -99,7 +99,7 @@ export function RunsTable({ runs }: { runs: IngestionRun[] }) {
                   </td>
                 </tr>
               )}
-            </>
+            </Fragment>
           );
         })}
       </tbody>
