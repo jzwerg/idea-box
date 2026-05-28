@@ -171,12 +171,20 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       ]);
 
       const duration = 1400 + Math.floor(Math.random() * 1600);
+      const learnedText = learnedRules
+        .filter((r) => r.enabled)
+        .map((r) => r.rule)
+        .join("\n");
+      const composedInstructions = learnedText
+        ? `${instructions}\n\n[Learned rules]\n${learnedText}`
+        : instructions;
       setTimeout(() => {
         const result = applyRef.current?.({
           weights: snapshot,
-          instructions,
+          instructions: composedInstructions,
           runInstructions,
         });
+
         setRuns((rs) =>
           rs.map((r) =>
             r.id === id
