@@ -205,11 +205,8 @@ function SignalDashboard() {
     requests
       .filter((r) => r.status === "new")
       .forEach((r) => counts.set(r.userType, (counts.get(r.userType) ?? 0) + 1));
-    let top: { type: UserType; n: number } | null = null;
-    counts.forEach((n, type) => {
-      if (!top || n > top.n) top = { type, n };
-    });
-    return top;
+    const entries = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    return entries[0] ? { type: entries[0][0], n: entries[0][1] } : null;
   })();
   const avgConf =
     requests.filter((r) => r.status === "new").reduce((s, r) => s + r.confidence, 0) /
