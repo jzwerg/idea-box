@@ -28,6 +28,7 @@ interface Props {
   onOpen: () => void;
   showCheckbox: boolean;
   draggable: boolean;
+  parkedBadge?: React.ReactNode;
 }
 
 export function StagingRow({
@@ -38,6 +39,7 @@ export function StagingRow({
   onOpen,
   showCheckbox,
   draggable,
+  parkedBadge,
 }: Props) {
   const { weights } = useAgent();
   const { pinned, togglePin } = useStaging();
