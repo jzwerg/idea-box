@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IngestionIndexRouteImport } from './routes/ingestion.index'
+import { Route as IngestionSourceIdRouteImport } from './routes/ingestion.$sourceId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IngestionIndexRoute = IngestionIndexRouteImport.update({
+  id: '/ingestion/',
+  path: '/ingestion/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IngestionSourceIdRoute = IngestionSourceIdRouteImport.update({
+  id: '/ingestion/$sourceId',
+  path: '/ingestion/$sourceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ingestion/$sourceId': typeof IngestionSourceIdRoute
+  '/ingestion/': typeof IngestionIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ingestion/$sourceId': typeof IngestionSourceIdRoute
+  '/ingestion': typeof IngestionIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ingestion/$sourceId': typeof IngestionSourceIdRoute
+  '/ingestion/': typeof IngestionIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/ingestion/$sourceId' | '/ingestion/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/ingestion/$sourceId' | '/ingestion'
+  id: '__root__' | '/' | '/ingestion/$sourceId' | '/ingestion/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  IngestionSourceIdRoute: typeof IngestionSourceIdRoute
+  IngestionIndexRoute: typeof IngestionIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ingestion/': {
+      id: '/ingestion/'
+      path: '/ingestion'
+      fullPath: '/ingestion/'
+      preLoaderRoute: typeof IngestionIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ingestion/$sourceId': {
+      id: '/ingestion/$sourceId'
+      path: '/ingestion/$sourceId'
+      fullPath: '/ingestion/$sourceId'
+      preLoaderRoute: typeof IngestionSourceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  IngestionSourceIdRoute: IngestionSourceIdRoute,
+  IngestionIndexRoute: IngestionIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
