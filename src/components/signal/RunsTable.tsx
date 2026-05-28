@@ -44,9 +44,8 @@ export function RunsTable({ runs }: { runs: IngestionRun[] }) {
           const Icon = meta.icon;
           const open = openId === r.id;
           return (
-            <>
+            <Fragment key={r.id}>
               <tr
-                key={r.id}
                 className="border-b cursor-pointer hover:bg-accent/40"
                 onClick={() => setOpenId(open ? null : r.id)}
               >
