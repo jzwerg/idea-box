@@ -174,7 +174,7 @@ function SignalDashboard() {
   const visible = useMemo(() => {
     let list = requests.filter((r) => r.status === tab);
     if (areaFilter !== "all") list = list.filter((r) => r.productArea === areaFilter);
-    if (complianceOnly) list = list.filter((r) => r.complianceFlag);
+    if (userTypeFilter !== "all") list = list.filter((r) => r.userType === userTypeFilter);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -197,12 +197,20 @@ function SignalDashboard() {
       }
     });
     return list;
-  }, [requests, tab, areaFilter, complianceOnly, query, sortKey]);
+  }, [requests, tab, areaFilter, userTypeFilter, query, sortKey]);
 
   const newCount = requests.filter((r) => r.status === "new").length;
-  const flaggedCount = requests.filter(
-    (r) => r.complianceFlag && r.status === "new",
-  ).length;
+  const topUserType = (() => {
+    const counts = new Map<UserType, number>();
+    requests
+      .filter((r) => r.status === "new")
+      .forEach((r) => counts.set(r.userType, (counts.get(r.userType) ?? 0) + 1));
+    let top: { type: UserType; n: number } | null = null;
+    counts.forEach((n, type) => {
+      if (!top || n > top.n) top = { type, n };
+    });
+    return top;
+  })();
   const avgConf =
     requests.filter((r) => r.status === "new").reduce((s, r) => s + r.confidence, 0) /
     Math.max(1, newCount);
