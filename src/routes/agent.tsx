@@ -56,8 +56,15 @@ function AgentPage() {
     runs,
     status,
     runAgent,
+    learnedRules,
+    pendingProposals,
+    acceptProposal,
+    dismissProposal,
+    toggleLearnedRule,
+    removeLearnedRule,
   } = useAgent();
   const [runInstr, setRunInstr] = useState("");
+
 
   const total =
     weights.impact + weights.reach + weights.urgency + weights.effort || 1;
