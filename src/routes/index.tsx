@@ -45,8 +45,9 @@ import { SignalShell } from "@/components/signal/SignalShell";
 import { StagingRow } from "@/components/signal/StagingRow";
 import { ViewsBar } from "@/components/signal/ViewsBar";
 import { TrustMeter } from "@/components/signal/TrustMeter";
+import { BrainstormSheet } from "@/components/signal/BrainstormSheet";
 import { Link } from "@tanstack/react-router";
-import { Brain } from "lucide-react";
+import { Brain, Lightbulb } from "lucide-react";
 import { useAgent, compositeWith } from "@/lib/agent-context";
 import { useStaging, matchesView } from "@/lib/staging-context";
 import { buildProposedRule } from "@/lib/teach";
@@ -95,6 +96,7 @@ function SignalDashboard() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [pushOpen, setPushOpen] = useState(false);
   const [pushTargets, setPushTargets] = useState<string[]>([]);
+  const [brainstormOpen, setBrainstormOpen] = useState(false);
 
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
@@ -159,6 +161,21 @@ function SignalDashboard() {
     });
     return () => registerApply(null);
   }, [registerApply, weights]);
+
+  // Keyboard shortcut: B to open brainstorm (when not typing)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "b" && e.key !== "B") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /input|textarea|select/i.test(t.tagName)) return;
+      if (t?.isContentEditable) return;
+      e.preventDefault();
+      setBrainstormOpen((o) => !o);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
     setRequests((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -387,6 +404,13 @@ function SignalDashboard() {
       {tab === "new" && (
         <div className="border-b bg-background/60 px-6 py-2.5 flex items-center gap-3 flex-wrap">
           <ViewsBar />
+          <button
+            onClick={() => setBrainstormOpen(true)}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-amber-500/40 px-2.5 py-1 text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+            title="Brainstorm (B)"
+          >
+            <Lightbulb className="h-3 w-3" /> Brainstorm
+          </button>
           {hasManualOrdering && (
             <button
               onClick={clearManualOrdering}
@@ -529,6 +553,12 @@ function SignalDashboard() {
         onOpenChange={setPushOpen}
         requests={requests.filter((r) => pushTargets.includes(r.id))}
         onConfirm={confirmPush}
+      />
+      <BrainstormSheet
+        open={brainstormOpen}
+        onOpenChange={setBrainstormOpen}
+        requests={requests}
+        onOpenRequest={setOpenId}
       />
     </SignalShell>
   );
