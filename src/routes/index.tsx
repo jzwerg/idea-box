@@ -441,7 +441,7 @@ function SignalDashboard() {
         onConfirm={confirmPush}
       />
       <Toaster />
-    </div>
+    </SignalShell>
   );
 }
 
