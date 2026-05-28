@@ -14,8 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Activity,
-  Radio,
   ShieldAlert,
   Search,
   GitMerge,
