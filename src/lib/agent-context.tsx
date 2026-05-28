@@ -201,7 +201,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         setStatus("idle");
       }, duration);
     },
-    [weights, instructions],
+    [weights, instructions, learnedRules],
   );
 
   // Auto-trigger on batch landing from any source
@@ -224,7 +224,16 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         status,
         runAgent,
         registerApply,
+        learnedRules,
+        pendingProposals,
+        proposeRule,
+        acceptProposal,
+        dismissProposal,
+        toggleLearnedRule,
+        removeLearnedRule,
       }}
+    >
+
     >
       {children}
     </Ctx.Provider>
