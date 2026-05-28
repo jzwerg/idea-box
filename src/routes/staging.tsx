@@ -15,7 +15,7 @@ import {
   Search,
   GitMerge,
   Trash2,
-  Send,
+  Send as SendIcon,
   Users,
   RotateCcw,
   MoonStar,
@@ -467,7 +467,7 @@ function StagingPage() {
             </Button>
             {!isParkedTab && (
               <Button size="sm" className="h-8 gap-1.5" onClick={() => openPush(Array.from(selectedIds))}>
-                <Send className="h-3.5 w-3.5" /> Push to Jira
+                <SendIcon className="h-3.5 w-3.5" /> Push to Jira
               </Button>
             )}
           </div>
