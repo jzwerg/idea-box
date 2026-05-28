@@ -34,10 +34,12 @@ import { PriorityBar } from "@/components/signal/PriorityBar";
 import { DetailDrawer } from "@/components/signal/DetailDrawer";
 import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
 import { SignalShell } from "@/components/signal/SignalShell";
-import { SignalShell } from "@/components/signal/SignalShell";
 import { Link } from "@tanstack/react-router";
 import { Brain } from "lucide-react";
 import { useAgent, compositeWith } from "@/lib/agent-context";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
     meta: [
       { title: "Signal — Feature request triage" },
       {
