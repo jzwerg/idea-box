@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StagingRouteImport } from './routes/staging'
+import { Route as OutcomeRouteImport } from './routes/outcome'
 import { Route as AgentRouteImport } from './routes/agent'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as IngestionIndexRouteImport } from './routes/ingestion.index'
@@ -18,6 +19,11 @@ import { Route as IngestionSourceIdRouteImport } from './routes/ingestion.$sourc
 const StagingRoute = StagingRouteImport.update({
   id: '/staging',
   path: '/staging',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutcomeRoute = OutcomeRouteImport.update({
+  id: '/outcome',
+  path: '/outcome',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgentRoute = AgentRouteImport.update({
@@ -44,6 +50,7 @@ const IngestionSourceIdRoute = IngestionSourceIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent': typeof AgentRoute
+  '/outcome': typeof OutcomeRoute
   '/staging': typeof StagingRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/ingestion/': typeof IngestionIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent': typeof AgentRoute
+  '/outcome': typeof OutcomeRoute
   '/staging': typeof StagingRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/ingestion': typeof IngestionIndexRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent': typeof AgentRoute
+  '/outcome': typeof OutcomeRoute
   '/staging': typeof StagingRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/ingestion/': typeof IngestionIndexRoute
@@ -68,15 +77,23 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agent'
+    | '/outcome'
     | '/staging'
     | '/ingestion/$sourceId'
     | '/ingestion/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agent' | '/staging' | '/ingestion/$sourceId' | '/ingestion'
+  to:
+    | '/'
+    | '/agent'
+    | '/outcome'
+    | '/staging'
+    | '/ingestion/$sourceId'
+    | '/ingestion'
   id:
     | '__root__'
     | '/'
     | '/agent'
+    | '/outcome'
     | '/staging'
     | '/ingestion/$sourceId'
     | '/ingestion/'
@@ -85,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentRoute: typeof AgentRoute
+  OutcomeRoute: typeof OutcomeRoute
   StagingRoute: typeof StagingRoute
   IngestionSourceIdRoute: typeof IngestionSourceIdRoute
   IngestionIndexRoute: typeof IngestionIndexRoute
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/staging'
       fullPath: '/staging'
       preLoaderRoute: typeof StagingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outcome': {
+      id: '/outcome'
+      path: '/outcome'
+      fullPath: '/outcome'
+      preLoaderRoute: typeof OutcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agent': {
@@ -133,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentRoute: AgentRoute,
+  OutcomeRoute: OutcomeRoute,
   StagingRoute: StagingRoute,
   IngestionSourceIdRoute: IngestionSourceIdRoute,
   IngestionIndexRoute: IngestionIndexRoute,
@@ -140,3 +166,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
