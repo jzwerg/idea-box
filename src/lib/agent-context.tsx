@@ -8,6 +8,27 @@ import {
   type ReactNode,
 } from "react";
 import { WEIGHTS as DEFAULT_WEIGHTS } from "./mock-requests";
+import type { TeachAction } from "./teach";
+
+export interface LearnedRule {
+  id: string;
+  rule: string;
+  sourceAction: TeachAction;
+  sourceRequestId?: string;
+  sourceTitle?: string;
+  createdAt: string;
+  enabled: boolean;
+}
+
+export interface Proposal {
+  id: string;
+  rule: string;
+  sourceAction: TeachAction;
+  sourceRequestId?: string;
+  sourceTitle?: string;
+  createdAt: string;
+}
+
 
 export type Weights = {
   impact: number;
