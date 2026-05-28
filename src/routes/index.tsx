@@ -539,6 +539,12 @@ function SignalDashboard() {
         requests={requests.filter((r) => pushTargets.includes(r.id))}
         onConfirm={confirmPush}
       />
+      <BrainstormSheet
+        open={brainstormOpen}
+        onOpenChange={setBrainstormOpen}
+        requests={requests}
+        onOpenRequest={setOpenId}
+      />
     </SignalShell>
   );
 }
