@@ -289,3 +289,69 @@ export function matchesView(
     return words.every((w) => haystack.includes(w));
   });
 }
+
+const STOPWORDS = new Set([
+  "a","an","the","for","to","with","of","and","or","on","in","is","are","be",
+  "my","i","we","you","it","this","that","as","at","by","but","if","so","do",
+  "can","should","would","could","will","just","need","want","add","make","new",
+]);
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w));
+}
+
+/**
+ * Heuristic similarity score for brainstorming. Returns raw weighted hit count.
+ * Caller normalises against top score.
+ */
+export function scoreRequest(
+  idea: string,
+  ctx: {
+    title: string;
+    description: string;
+    tags: string[];
+    userType: string;
+    productArea: string;
+  },
+): { score: number; hits: string[] } {
+  const tokens = tokenize(idea);
+  if (tokens.length === 0) return { score: 0, hits: [] };
+  const bigrams: string[] = [];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    bigrams.push(`${tokens[i]} ${tokens[i + 1]}`);
+  }
+
+  const fields: Array<{ text: string; weight: number }> = [
+    { text: ctx.title.toLowerCase(), weight: 3 },
+    { text: ctx.tags.join(" ").toLowerCase(), weight: 2.5 },
+    { text: ctx.productArea.toLowerCase(), weight: 2 },
+    { text: ctx.userType.toLowerCase(), weight: 1.5 },
+    { text: ctx.description.toLowerCase(), weight: 1 },
+  ];
+
+  let score = 0;
+  const hits = new Set<string>();
+  for (const tok of tokens) {
+    for (const f of fields) {
+      if (f.text.includes(tok)) {
+        score += f.weight;
+        hits.add(tok);
+      }
+    }
+  }
+  for (const bg of bigrams) {
+    for (const f of fields) {
+      if (f.text.includes(bg)) {
+        score += f.weight * 1.5;
+        hits.add(bg);
+      }
+    }
+  }
+  return { score, hits: Array.from(hits) };
+}
+
