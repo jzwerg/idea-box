@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, List, LayoutGrid, RotateCcw, Send, Trash2 } from "lucide-react";
+import { Search, List, LayoutGrid, RotateCcw } from "lucide-react";
 import {
   MOCK_REQUESTS,
   type RequestRecord,
