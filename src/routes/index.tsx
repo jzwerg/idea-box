@@ -31,7 +31,7 @@ import {
 import { SourceBadge } from "@/components/signal/SourceBadge";
 import { PriorityBar } from "@/components/signal/PriorityBar";
 import { DetailDrawer } from "@/components/signal/DetailDrawer";
-import { PriorityBar } from "@/components/signal/PriorityBar";
+import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
 import { SignalShell } from "@/components/signal/SignalShell";
 
 export const Route = createFileRoute("/")({
