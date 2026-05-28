@@ -62,10 +62,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-:root {
+
   --radius: 0.5rem;
   /* Operator console — deep slate, sharp amber accent */
   --background: oklch(0.18 0.015 250);
