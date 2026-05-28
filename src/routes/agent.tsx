@@ -279,7 +279,9 @@ function AgentPage() {
               </div>
             )}
           </section>
+        </div>
       </div>
+
       <LearnedRulesSection
         learnedRules={learnedRules}
         pendingProposals={pendingProposals}
