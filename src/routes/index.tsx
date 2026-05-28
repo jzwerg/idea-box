@@ -295,7 +295,53 @@ function SignalDashboard() {
           />
         </>
       }
-    >
+      {/* Agent banner — visible at all times */}
+      <div className="border-b bg-primary/[0.04] px-6 py-2 flex items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Brain
+            className={`h-3.5 w-3.5 ${
+              agentStatus === "running" ? "text-primary animate-pulse" : "text-primary/70"
+            }`}
+          />
+          <span>Prioritization agent</span>
+          <span className="text-muted-foreground/60">·</span>
+          {agentStatus === "running" ? (
+            <span className="text-primary">Rescoring staging…</span>
+          ) : agentRuns[0] ? (
+            <span>
+              Last run{" "}
+              <span className="text-foreground">
+                {new Date(agentRuns[0].startedAt).toLocaleTimeString()}
+              </span>{" "}
+              ({agentRuns[0].trigger}) — rescored{" "}
+              <span className="font-mono text-foreground">{agentRuns[0].rescored}</span>
+              {agentRuns[0].topMover && (
+                <>
+                  , top mover{" "}
+                  <span className="text-foreground">{agentRuns[0].topMover.title}</span>{" "}
+                  <span
+                    className={`font-mono ${
+                      agentRuns[0].topMover.delta >= 0 ? "text-chart-2" : "text-destructive"
+                    }`}
+                  >
+                    {agentRuns[0].topMover.delta >= 0 ? "+" : ""}
+                    {agentRuns[0].topMover.delta}
+                  </span>
+                </>
+              )}
+            </span>
+          ) : (
+            <span>Waiting for the first batch.</span>
+          )}
+        </div>
+        <Link
+          to="/agent"
+          className="text-primary hover:underline font-medium flex items-center gap-1"
+        >
+          Tune & run →
+        </Link>
+      </div>
+
       {/* Status sub-tabs */}
       <div className="border-b bg-card/20 px-6 py-1.5 flex items-center gap-1">
         {TABS.map((t) => (
