@@ -14,8 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Activity,
-  Radio,
   ShieldAlert,
   Search,
   GitMerge,
@@ -34,6 +32,7 @@ import { SourceBadge } from "@/components/signal/SourceBadge";
 import { PriorityBar } from "@/components/signal/PriorityBar";
 import { DetailDrawer } from "@/components/signal/DetailDrawer";
 import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
+import { SignalShell } from "@/components/signal/SignalShell";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -208,61 +207,41 @@ function SignalDashboard() {
   const selectedRequests = requests.filter((r) => selectedIds.has(r.id));
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b bg-card/40 backdrop-blur sticky top-0 z-10">
-        <div className="px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Radio className="h-5 w-5 text-primary" />
-                <div className="absolute inset-0 animate-ping">
-                  <Radio className="h-5 w-5 text-primary opacity-30" />
-                </div>
-              </div>
-              <h1 className="font-semibold tracking-tight text-lg">Signal</h1>
-              <span className="text-xs text-muted-foreground font-mono ml-1">v0.1</span>
-            </div>
-            <nav className="flex items-center gap-1">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => {
-                    setTab(t.key as Status);
-                    setSelectedIds(new Set());
-                  }}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    tab === t.key
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.label}
-                  {t.key === "new" && newCount > 0 && (
-                    <span className="ml-2 font-mono text-xs text-primary">{newCount}</span>
-                  )}
-                </button>
-              ))}
-              <button className="px-3 py-1.5 text-sm rounded-md text-muted-foreground/50 cursor-not-allowed">
-                Settings
-              </button>
-            </nav>
-          </div>
-          <div className="flex items-center gap-6 text-xs">
-            <Stat label="New this week" value={newCount.toString()} />
-            <Stat label="Avg confidence" value={`${Math.round(avgConf * 100)}%`} />
-            <Stat
-              label="Compliance flagged"
-              value={flaggedCount.toString()}
-              accent={flaggedCount > 0}
-            />
-            <div className="flex items-center gap-1.5 pl-6 border-l">
-              <Activity className="h-3.5 w-3.5 text-chart-2" />
-              <span className="text-muted-foreground">Ingesting</span>
-            </div>
-          </div>
-        </div>
-      </header>
+    <SignalShell
+      rightSlot={
+        <>
+          <Stat label="New this week" value={newCount.toString()} />
+          <Stat label="Avg confidence" value={`${Math.round(avgConf * 100)}%`} />
+          <Stat
+            label="Compliance flagged"
+            value={flaggedCount.toString()}
+            accent={flaggedCount > 0}
+          />
+        </>
+      }
+    >
+      {/* Status sub-tabs */}
+      <div className="border-b bg-card/20 px-6 py-1.5 flex items-center gap-1">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => {
+              setTab(t.key as Status);
+              setSelectedIds(new Set());
+            }}
+            className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              tab === t.key
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+            {t.key === "new" && newCount > 0 && (
+              <span className="ml-2 font-mono text-[10px] text-primary">{newCount}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* Filter bar */}
       <div className="border-b bg-background/60 px-6 py-2.5 flex items-center gap-3 flex-wrap">
@@ -462,7 +441,7 @@ function SignalDashboard() {
         onConfirm={confirmPush}
       />
       <Toaster />
-    </div>
+    </SignalShell>
   );
 }
 

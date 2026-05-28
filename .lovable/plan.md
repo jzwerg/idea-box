@@ -1,46 +1,109 @@
+# Plan: Ingestion settings & runs visibility
 
-## Signal — Prototype Plan
+Add two new sections that sit *upstream* of the staging dashboard, so you can see exactly what's flowing in before it lands in triage.
 
-A clickable, frontend-only prototype of **Signal**, the AI triage dashboard from the PRD. No backend, no real ingestion — everything runs on realistic mock data so you can demo the core ritual end-to-end.
+## 1. Top nav: wire up the tab strip
 
-### Scope (v0 prototype)
+Today the "Signal" shell has a static tab strip. Make it real with TanStack routes:
 
-Single-page app focused on the **staging dashboard** (Section 7 of the PRD), which is the heart of the product. Built around the key user flow from Section 9.
+- `/` — Staging (existing)
+- `/ingestion` — Ingestion settings (new)
+- `/ingestion/$sourceId` — Source detail with runs + scope (new)
 
-### Screens / surfaces
+## 2. `/ingestion` — Connected sources
 
-1. **Staging table** (home)
-   - Ranked, sortable, filterable table of extracted requests
-   - Columns: Rank, Title, Product area, Source, Frequency, Confidence, Priority score, Status
-   - Filters: status (new/reviewed/dismissed/pushed), product area, source, compliance-flagged
-   - Bulk-select with action bar: Merge, Dismiss, Push to Jira
-   - Compliance-flagged rows visually distinct
+A grid of source cards (one per integration), with simulated SSO:
 
-2. **Detail drawer** (slides in on row click)
-   - Full description, source links with origin badges (Teams / Email / Read.AI)
-   - Clustered mentions list (showing aggregated evidence)
-   - Score breakdown — 4 dimensions (Impact 35%, Reach 25%, Urgency 20%, Effort 20%) with rationale text per dimension and editable sub-scores; composite updates live
-   - Inline edit of title / area
-   - Actions: Dismiss, Push to Jira
+| Source | Status | Last run | Items ingested (24h) |
+|---|---|---|---|
+| Microsoft Teams | Connected | 4m ago | 38 |
+| Outlook | Connected | 11m ago | 17 |
+| Read.AI / Meeting Notes | Connected | 22m ago | 9 |
+| Jira (write-back) | Connected | — | — |
+| Slack | Not connected | — | — |
+| Zendesk | Not connected | — | — |
 
-3. **Push to Jira modal**
-   - Project + issue type selectors, field-mapping preview
-   - On confirm: rows stamped `pushed` with a fake `jira_key`, toast confirmation
+Each card has:
+- Source logo + name + short description
+- Connect / Disconnect button (simulated SSO modal: "Sign in with Microsoft" spinner → success toast → status flips to Connected)
+- Scope summary chips (e.g. "3 Teams channels", "2 mailboxes", "All meetings")
+- "Configure" link → opens detail route
 
-4. **Top nav / shell**
-   - Logo "Signal", tab strip (Staging · Pushed · Dismissed · Settings — only Staging is fully interactive)
-   - Stat strip: new this week, avg confidence, compliance-flagged count
+Empty/disconnected cards show a muted "Connect to start ingesting" CTA.
 
-### Mock data
+## 3. `/ingestion/$sourceId` — Source detail
 
-~25 seeded requests across the 6 U-Reg platform apps, realistic RegTech phrasing, mix of sources, a couple of compliance-flagged items, one obvious duplicate pair to demo Merge.
+Two stacked panels:
 
-### Out of scope for prototype
-Real connectors, auth, persistence (state is in-memory React only), Settings page internals, analytics.
+### a. Scope
+What this connector is allowed to pull. Editable inline (local state only).
+- Teams: list of channels with toggle switches (e.g. `#ureg-support`, `#kyc-product`, `#compliance-watch`)
+- Outlook: shared mailboxes + label/folder filters (`feedback@`, `support@`, "RegTech feedback" folder)
+- Read.AI: meeting series filters, participants, keywords
+- Each list shows item count + "Add channel/mailbox/filter" button (opens a small picker dialog with mock options)
 
-### Technical notes
-- TanStack Start route `src/routes/index.tsx` renders the dashboard
-- State: local React state + a single mock-data module in `src/lib/mock-requests.ts`
-- UI: shadcn primitives (table, sheet for drawer, dialog for Jira modal, badge, button, checkbox, select)
-- Design tokens: dark, focused "operator console" feel — deep slate background, single sharp accent for priority/score, monospaced numerics. Defined in `src/styles.css`.
-- No new dependencies needed
+### b. Recent runs
+Table of the last ~15 ingestion runs for this source:
+
+| Started | Duration | Items scanned | Signals extracted | Pushed to staging | Status |
+|---|---|---|---|---|---|
+| 2m ago | 4.2s | 142 | 6 | 4 | Success |
+| 18m ago | 3.8s | 98 | 3 | 3 | Success |
+| 34m ago | 5.1s | 211 | 9 | 7 | Partial — 2 filtered (low confidence) |
+| 1h ago | — | — | — | — | Failed — auth expired |
+
+Click a row → expandable details: list of source items scanned (titles only), which became signals, which were filtered and why ("duplicate of #REQ-0142", "confidence < 0.4", "not feature-related"). This makes the pre-staging funnel transparent.
+
+Header actions: "Run now" (simulated — appends a new row with a spinner that resolves in ~2s), "Pause source".
+
+## 4. Mock data layer
+
+New file `src/lib/mock-sources.ts`:
+
+```ts
+export type SourceId = 'teams' | 'outlook' | 'readai' | 'jira' | 'slack' | 'zendesk';
+export type RunStatus = 'success' | 'partial' | 'failed' | 'running';
+
+export interface IngestionRun {
+  id: string;
+  startedAt: string;
+  durationMs: number;
+  itemsScanned: number;
+  signalsExtracted: number;
+  pushedToStaging: number;
+  status: RunStatus;
+  notes?: string;
+  items?: { title: string; outcome: 'signal' | 'filtered' | 'duplicate'; reason?: string }[];
+}
+
+export interface Source {
+  id: SourceId;
+  name: string;
+  description: string;
+  connected: boolean;
+  scope: ScopeItem[];          // shape varies per source
+  runs: IngestionRun[];
+}
+```
+
+State lives in a small Zustand-free React context (`SourcesProvider` in `src/lib/sources-context.tsx`) so Connect / Disconnect / Run-now / scope toggles persist across `/ingestion` and `/ingestion/$sourceId` during the session.
+
+## 5. Components (under `src/components/signal/`)
+
+- `SourceCard.tsx` — grid card for `/ingestion`
+- `ConnectDialog.tsx` — simulated SSO modal (provider-branded copy, fake 1.5s spinner)
+- `ScopePanel.tsx` — editable scope list with add/remove
+- `RunsTable.tsx` — runs table with expandable row
+- `RunDetailRow.tsx` — per-item breakdown
+
+Reuses existing `SourceBadge` for icons and the dark operator-console tokens already in `src/styles.css`. No new dependencies.
+
+## 6. Out of scope (call out for later)
+
+- Real OAuth — fully simulated
+- Persisting state beyond the session (no Lovable Cloud yet)
+- Editing scoring weights from the source detail (still lives in DetailDrawer)
+
+---
+
+Approve and I'll build it; or tell me which sources / scope fields you want adjusted first.
