@@ -162,6 +162,21 @@ function SignalDashboard() {
     return () => registerApply(null);
   }, [registerApply, weights]);
 
+  // Keyboard shortcut: B to open brainstorm (when not typing)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "b" && e.key !== "B") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /input|textarea|select/i.test(t.tagName)) return;
+      if (t?.isContentEditable) return;
+      e.preventDefault();
+      setBrainstormOpen((o) => !o);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const update = (id: string, patch: Partial<RequestRecord>) => {
     setRequests((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   };
