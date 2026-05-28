@@ -116,7 +116,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
         ...s,
         pinned: { ...s.pinned, [id]: now },
         trustHistory: [
-          { ts: new Date().toISOString(), action: now ? "pin" : "unpin", requestId: id },
+          { ts: new Date().toISOString(), action: (now ? "pin" : "unpin") as TrustEvent["action"], requestId: id },
           ...s.trustHistory,
         ].slice(0, 200),
       };
@@ -131,7 +131,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
         ...s,
         manualRank: next,
         trustHistory: [
-          { ts: new Date().toISOString(), action: "reorder" },
+          { ts: new Date().toISOString(), action: "reorder" as const },
           ...s.trustHistory,
         ].slice(0, 200),
       };
@@ -152,7 +152,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
         ...s,
         tags: { ...s.tags, [id]: [...existing, t] },
         trustHistory: [
-          { ts: new Date().toISOString(), action: "tag", requestId: id },
+          { ts: new Date().toISOString(), action: "tag" as const, requestId: id },
           ...s.trustHistory,
         ].slice(0, 200),
       };
@@ -164,7 +164,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
       ...s,
       tags: { ...s.tags, [id]: (s.tags[id] ?? []).filter((t) => t !== tag) },
       trustHistory: [
-        { ts: new Date().toISOString(), action: "untag", requestId: id },
+        { ts: new Date().toISOString(), action: "untag" as const, requestId: id },
         ...s.trustHistory,
       ].slice(0, 200),
     }));
@@ -176,7 +176,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
       notes: { ...s.notes, [id]: text },
       trustHistory: text.trim()
         ? [
-            { ts: new Date().toISOString(), action: "note", requestId: id },
+            { ts: new Date().toISOString(), action: "note" as const, requestId: id },
             ...s.trustHistory,
           ].slice(0, 200)
         : s.trustHistory,
