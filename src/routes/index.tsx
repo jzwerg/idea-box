@@ -240,9 +240,8 @@ function SignalDashboard() {
           <Stat label="New this week" value={newCount.toString()} />
           <Stat label="Avg confidence" value={`${Math.round(avgConf * 100)}%`} />
           <Stat
-            label="Compliance flagged"
-            value={flaggedCount.toString()}
-            accent={flaggedCount > 0}
+            label="Top user type"
+            value={topUserType ? `${topUserType.type} · ${topUserType.n}` : "—"}
           />
         </>
       }
@@ -294,15 +293,23 @@ function SignalDashboard() {
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant={complianceOnly ? "default" : "outline"}
-          size="sm"
-          className="h-8 gap-1.5"
-          onClick={() => setComplianceOnly((c) => !c)}
+        <Select
+          value={userTypeFilter}
+          onValueChange={(v) => setUserTypeFilter(v as UserType | "all")}
         >
-          <ShieldAlert className="h-3.5 w-3.5" />
-          Compliance only
-        </Button>
+          <SelectTrigger className="h-8 w-52 text-sm">
+            <Users className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All user types</SelectItem>
+            {USER_TYPES.map((u) => (
+              <SelectItem key={u} value={u}>
+                {u}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="ml-auto flex items-center gap-2">
           <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
           <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
