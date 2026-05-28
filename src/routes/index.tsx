@@ -391,7 +391,7 @@ function SignalDashboard() {
                   key={r.id}
                   className={`border-b cursor-pointer transition-colors ${
                     checked ? "bg-primary/5" : "hover:bg-accent/40"
-                  } ${r.complianceFlag ? "border-l-2 border-l-destructive/50" : ""}`}
+                  }`}
                   onClick={() => setOpenId(r.id)}
                 >
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -415,12 +415,12 @@ function SignalDashboard() {
                   <td className="px-2 py-3">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{r.title}</span>
-                      {r.complianceFlag && (
-                        <Badge variant="destructive" className="gap-1 font-normal text-[10px] py-0 h-4">
-                          <ShieldAlert className="h-2.5 w-2.5" />
-                          Compliance
-                        </Badge>
-                      )}
+                      <Badge
+                        variant="outline"
+                        className={`font-normal text-[10px] py-0 h-4 ${USER_TYPE_TONE[r.userType]}`}
+                      >
+                        {r.userType}
+                      </Badge>
                       {r.jiraKey && (
                         <span className="font-mono text-[10px] text-muted-foreground">
                           {r.jiraKey}
