@@ -137,12 +137,11 @@ export function StagingRow({
         <NotePopover request={r} />
       </td>
       <td className="px-4 py-3 text-right">
-        <Badge
-          variant="outline"
-          className="text-[10px] uppercase tracking-wider font-normal"
-        >
-          {r.status}
-        </Badge>
+        {parkedBadge ?? (
+          <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-normal">
+            {r.status}
+          </Badge>
+        )}
       </td>
     </tr>
   );
