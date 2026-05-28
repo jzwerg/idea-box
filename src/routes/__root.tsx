@@ -11,6 +11,10 @@ import {
 import appCss from "../styles.css?url";
 import { SourcesProvider } from "@/lib/sources-context";
 import { AgentProvider } from "@/lib/agent-context";
+import { StagingProvider } from "@/lib/staging-context";
+import { TeachToast } from "@/components/signal/TeachToast";
+import { Toaster } from "@/components/ui/sonner";
+
 
 function NotFoundComponent() {
   return (
