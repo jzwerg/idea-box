@@ -101,7 +101,7 @@ function SignalDashboard() {
   // filters
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
-  const [complianceOnly, setComplianceOnly] = useState(false);
+  const [userTypeFilter, setUserTypeFilter] = useState<UserType | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("priority");
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
