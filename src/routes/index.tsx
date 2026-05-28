@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,9 @@ import { PriorityBar } from "@/components/signal/PriorityBar";
 import { DetailDrawer } from "@/components/signal/DetailDrawer";
 import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
 import { SignalShell } from "@/components/signal/SignalShell";
+import { Link } from "@tanstack/react-router";
+import { Brain } from "lucide-react";
+import { useAgent, compositeWith } from "@/lib/agent-context";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -103,6 +106,56 @@ function SignalDashboard() {
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
   const [userTypeFilter, setUserTypeFilter] = useState<UserType | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("priority");
+  const { weights, registerApply, runs: agentRuns, status: agentStatus } = useAgent();
+
+  // Register the apply callback so the agent can rescore requests
+  useEffect(() => {
+    registerApply(({ instructions, runInstructions }) => {
+      const combined = `${instructions} ${runInstructions ?? ""}`.toLowerCase();
+      // Keyword nudges based on instructions
+      const boosts: Array<{ re: RegExp; field: "impact" | "urgency" | "reach"; amt: number }> = [
+        { re: /enterprise|procurement|sso|fido|okta|azure/i, field: "impact", amt: 8 },
+        { re: /compliance|regulat|amld|deadline|audit/i, field: "urgency", amt: 8 },
+        { re: /revenue|churn|retention|deal/i, field: "impact", amt: 6 },
+        { re: /reach|broad|many clients|quality-of-life/i, field: "reach", amt: 5 },
+      ];
+      let rescored = 0;
+      let topMover: { title: string; delta: number } | undefined;
+      setRequests((rs) =>
+        rs.map((r) => {
+          if (r.status !== "new") return r;
+          const before = compositeWith(r.priority, weights);
+          const next = { ...r.priority };
+          (Object.keys(next) as Array<keyof typeof next>).forEach((k) => {
+            // small jitter so the agent feels alive
+            const jitter = Math.round((Math.random() - 0.5) * 6);
+            next[k] = {
+              ...next[k],
+              value: Math.max(0, Math.min(100, next[k].value + jitter)),
+            };
+          });
+          // apply keyword boosts
+          for (const b of boosts) {
+            if (b.re.test(`${r.title} ${r.description} ${combined}`)) {
+              next[b.field] = {
+                ...next[b.field],
+                value: Math.min(100, next[b.field].value + b.amt),
+              };
+            }
+          }
+          const after = compositeWith(next, weights);
+          const delta = after - before;
+          if (delta !== 0) rescored += 1;
+          if (!topMover || Math.abs(delta) > Math.abs(topMover.delta)) {
+            topMover = { title: r.title, delta };
+          }
+          return { ...r, priority: next };
+        }),
+      );
+      return { rescored, topMover };
+    });
+    return () => registerApply(null);
+  }, [registerApply, weights]);
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
     setRequests((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -193,7 +246,7 @@ function SignalDashboard() {
           return b.createdAt.localeCompare(a.createdAt);
         case "priority":
         default:
-          return compositeScore(b.priority) - compositeScore(a.priority);
+          return compositeWith(b.priority, weights) - compositeWith(a.priority, weights);
       }
     });
     return list;
@@ -243,6 +296,53 @@ function SignalDashboard() {
         </>
       }
     >
+      {/* Agent banner — visible at all times */}
+      <div className="border-b bg-primary/[0.04] px-6 py-2 flex items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Brain
+            className={`h-3.5 w-3.5 ${
+              agentStatus === "running" ? "text-primary animate-pulse" : "text-primary/70"
+            }`}
+          />
+          <span>Prioritization agent</span>
+          <span className="text-muted-foreground/60">·</span>
+          {agentStatus === "running" ? (
+            <span className="text-primary">Rescoring staging…</span>
+          ) : agentRuns[0] ? (
+            <span>
+              Last run{" "}
+              <span className="text-foreground">
+                {new Date(agentRuns[0].startedAt).toLocaleTimeString()}
+              </span>{" "}
+              ({agentRuns[0].trigger}) — rescored{" "}
+              <span className="font-mono text-foreground">{agentRuns[0].rescored}</span>
+              {agentRuns[0].topMover && (
+                <>
+                  , top mover{" "}
+                  <span className="text-foreground">{agentRuns[0].topMover.title}</span>{" "}
+                  <span
+                    className={`font-mono ${
+                      agentRuns[0].topMover.delta >= 0 ? "text-chart-2" : "text-destructive"
+                    }`}
+                  >
+                    {agentRuns[0].topMover.delta >= 0 ? "+" : ""}
+                    {agentRuns[0].topMover.delta}
+                  </span>
+                </>
+              )}
+            </span>
+          ) : (
+            <span>Waiting for the first batch.</span>
+          )}
+        </div>
+        <Link
+          to="/agent"
+          className="text-primary hover:underline font-medium flex items-center gap-1"
+        >
+          Tune & run →
+        </Link>
+      </div>
+
       {/* Status sub-tabs */}
       <div className="border-b bg-card/20 px-6 py-1.5 flex items-center gap-1">
         {TABS.map((t) => (
@@ -383,7 +483,7 @@ function SignalDashboard() {
               </tr>
             )}
             {visible.map((r, idx) => {
-              const score = compositeScore(r.priority);
+              const score = compositeWith(r.priority, weights);
               const checked = selectedIds.has(r.id);
               const uniqueSources = Array.from(new Set(r.mentions.map((m) => m.source)));
               return (

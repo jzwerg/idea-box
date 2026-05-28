@@ -93,6 +93,13 @@ export function SourcesProvider({ children }: { children: ReactNode }) {
             : r,
         ),
       }));
+      if (pushed > 0 && typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("signal:batch-complete", {
+            detail: { sourceId: id, pushed },
+          }),
+        );
+      }
     }, 2000);
   }, []);
 

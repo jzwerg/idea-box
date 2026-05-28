@@ -1,10 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, Radio } from "lucide-react";
+import { Activity, Brain, Radio } from "lucide-react";
 import type { ReactNode } from "react";
+import { useAgent } from "@/lib/agent-context";
 
 const NAV: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/", label: "Staging", exact: true },
   { to: "/ingestion", label: "Ingestion" },
+  { to: "/agent", label: "Agent" },
 ];
 
 export function SignalShell({
@@ -15,6 +17,7 @@ export function SignalShell({
   rightSlot?: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { status: agentStatus } = useAgent();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,6 +58,17 @@ export function SignalShell({
           <div className="flex items-center gap-6 text-xs">
             {rightSlot}
             <div className="flex items-center gap-1.5 pl-6 border-l">
+              <Brain
+                className={`h-3.5 w-3.5 ${
+                  agentStatus === "running" ? "text-primary animate-pulse" : "text-muted-foreground"
+                }`}
+              />
+              <span className="text-muted-foreground">Agent</span>
+              <span className="font-mono text-foreground">
+                {agentStatus === "running" ? "running" : "idle"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 pl-4 border-l">
               <Activity className="h-3.5 w-3.5 text-chart-2" />
               <span className="text-muted-foreground">Ingesting</span>
             </div>
