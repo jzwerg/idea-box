@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AgentRouteImport } from './routes/agent'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as IngestionIndexRouteImport } from './routes/ingestion.index'
 import { Route as IngestionSourceIdRouteImport } from './routes/ingestion.$sourceId'
 
+const AgentRoute = AgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +37,47 @@ const IngestionSourceIdRoute = IngestionSourceIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/ingestion/': typeof IngestionIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/ingestion': typeof IngestionIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/ingestion/': typeof IngestionIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ingestion/$sourceId' | '/ingestion/'
+  fullPaths: '/' | '/agent' | '/ingestion/$sourceId' | '/ingestion/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ingestion/$sourceId' | '/ingestion'
-  id: '__root__' | '/' | '/ingestion/$sourceId' | '/ingestion/'
+  to: '/' | '/agent' | '/ingestion/$sourceId' | '/ingestion'
+  id: '__root__' | '/' | '/agent' | '/ingestion/$sourceId' | '/ingestion/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentRoute: typeof AgentRoute
   IngestionSourceIdRoute: typeof IngestionSourceIdRoute
   IngestionIndexRoute: typeof IngestionIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/agent': {
+      id: '/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,9 +104,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentRoute: AgentRoute,
   IngestionSourceIdRoute: IngestionSourceIdRoute,
   IngestionIndexRoute: IngestionIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

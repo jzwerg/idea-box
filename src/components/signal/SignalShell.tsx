@@ -1,10 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, Radio } from "lucide-react";
+import { Activity, Brain, Radio } from "lucide-react";
 import type { ReactNode } from "react";
+import { useAgent } from "@/lib/agent-context";
 
 const NAV: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/", label: "Staging", exact: true },
   { to: "/ingestion", label: "Ingestion" },
+  { to: "/agent", label: "Agent" },
 ];
 
 export function SignalShell({

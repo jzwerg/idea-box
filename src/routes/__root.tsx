@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { SourcesProvider } from "@/lib/sources-context";
+import { AgentProvider } from "@/lib/agent-context";
 
 function NotFoundComponent() {
   return (
@@ -115,9 +116,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <SourcesProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <AgentProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </AgentProvider>
       </SourcesProvider>
-    </QueryClientProvider>
   );
 }
