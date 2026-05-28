@@ -85,7 +85,57 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const [instructions, setInstructions] = useState<string>(DEFAULT_INSTRUCTIONS);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [status, setStatus] = useState<"idle" | "running">("idle");
+  const [learnedRules, setLearnedRules] = useState<LearnedRule[]>([]);
+  const [pendingProposals, setPendingProposals] = useState<Proposal[]>([]);
   const applyRef = useRef<AgentApplyFn | null>(null);
+
+  const proposeRule = useCallback((p: Omit<Proposal, "id" | "createdAt">) => {
+    const proposal: Proposal = {
+      ...p,
+      id: `prop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setPendingProposals((arr) => [proposal, ...arr].slice(0, 50));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("agent:proposal", { detail: proposal }));
+    }
+  }, []);
+
+  const acceptProposal = useCallback((id: string, finalRule?: string) => {
+    setPendingProposals((arr) => {
+      const p = arr.find((x) => x.id === id);
+      if (p) {
+        setLearnedRules((rules) => [
+          {
+            id: `rule-${Date.now()}`,
+            rule: finalRule?.trim() || p.rule,
+            sourceAction: p.sourceAction,
+            sourceRequestId: p.sourceRequestId,
+            sourceTitle: p.sourceTitle,
+            createdAt: new Date().toISOString(),
+            enabled: true,
+          },
+          ...rules,
+        ]);
+      }
+      return arr.filter((x) => x.id !== id);
+    });
+  }, []);
+
+  const dismissProposal = useCallback((id: string) => {
+    setPendingProposals((arr) => arr.filter((x) => x.id !== id));
+  }, []);
+
+  const toggleLearnedRule = useCallback((id: string) => {
+    setLearnedRules((rs) =>
+      rs.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
+    );
+  }, []);
+
+  const removeLearnedRule = useCallback((id: string) => {
+    setLearnedRules((rs) => rs.filter((r) => r.id !== id));
+  }, []);
+
 
   const registerApply = useCallback((fn: AgentApplyFn | null) => {
     applyRef.current = fn;
