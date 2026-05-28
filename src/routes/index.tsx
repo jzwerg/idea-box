@@ -295,6 +295,7 @@ function SignalDashboard() {
           />
         </>
       }
+    >
       {/* Agent banner — visible at all times */}
       <div className="border-b bg-primary/[0.04] px-6 py-2 flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-muted-foreground">
