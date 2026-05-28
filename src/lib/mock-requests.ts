@@ -1,4 +1,11 @@
 export type Source = "Teams" | "Email" | "Read.AI";
+export type UserType =
+  | "Compliance Officer"
+  | "Risk Analyst"
+  | "KYC Analyst"
+  | "Operations Lead"
+  | "Client Admin"
+  | "Exec Sponsor";
 export type Status = "new" | "reviewed" | "dismissed" | "pushed";
 export type ProductArea =
   | "Reporting"
@@ -39,7 +46,7 @@ export interface RequestRecord {
   mentions: SourceMention[];
   frequency: number;
   confidence: number; // 0-1
-  complianceFlag: boolean;
+  userType: UserType;
   priority: PriorityBreakdown;
   status: Status;
   createdAt: string;
@@ -76,7 +83,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 7,
     confidence: 0.92,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: {
         value: 88,
@@ -139,7 +146,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 3,
     confidence: 0.81,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 80, rationale: "Significant time savings for review teams." },
       reach: { value: 60, rationale: "3 clients asking, overlapping with SAR request." },
@@ -169,7 +176,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 5,
     confidence: 0.88,
-    complianceFlag: false,
+    userType: "Risk Analyst",
     priority: {
       impact: { value: 62, rationale: "Quality-of-life win; analysts currently post-process in Excel." },
       reach: { value: 70, rationale: "5 clients, mostly mid-market analytics teams." },
@@ -199,7 +206,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Read.AI",
     frequency: 4,
     confidence: 0.95,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 90, rationale: "Blocker for 2 active enterprise deals (~€480k ARR)." },
       reach: { value: 55, rationale: "Smaller cohort but high-value." },
@@ -230,7 +237,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 9,
     confidence: 0.78,
-    complianceFlag: false,
+    userType: "KYC Analyst",
     priority: {
       impact: { value: 35, rationale: "Cosmetic; no revenue tie identified." },
       reach: { value: 80, rationale: "Most-requested QoL item this quarter." },
@@ -260,7 +267,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 6,
     confidence: 0.9,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 75, rationale: "Cuts onboarding time on rejections from ~3 days to ~1 day." },
       reach: { value: 72, rationale: "All KYC-using clients (6 named)." },
@@ -290,7 +297,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 8,
     confidence: 0.93,
-    complianceFlag: false,
+    userType: "Operations Lead",
     priority: {
       impact: { value: 70, rationale: "Frees ~2 hours/week per client analyst." },
       reach: { value: 85, rationale: "8 clients, broad applicability." },
@@ -319,7 +326,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Read.AI",
     frequency: 4,
     confidence: 0.84,
-    complianceFlag: false,
+    userType: "Client Admin",
     priority: {
       impact: { value: 50, rationale: "Helps client-facing presentation, no direct revenue." },
       reach: { value: 60, rationale: "4 mid-market clients." },
@@ -349,7 +356,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 3,
     confidence: 0.87,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 65, rationale: "Cuts incident-investigation time materially." },
       reach: { value: 45, rationale: "Compliance teams only, 3 clients." },
@@ -378,7 +385,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 2,
     confidence: 0.7,
-    complianceFlag: false,
+    userType: "Exec Sponsor",
     priority: {
       impact: { value: 40, rationale: "Collaboration improvement, modest." },
       reach: { value: 30, rationale: "Only 2 mentions so far." },
@@ -407,7 +414,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Read.AI",
     frequency: 5,
     confidence: 0.96,
-    complianceFlag: false,
+    userType: "Risk Analyst",
     priority: {
       impact: { value: 82, rationale: "Removes a procurement blocker for enterprise deals." },
       reach: { value: 65, rationale: "5 clients, all upper tier." },
@@ -436,7 +443,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 3,
     confidence: 0.83,
-    complianceFlag: false,
+    userType: "KYC Analyst",
     priority: {
       impact: { value: 45, rationale: "Most users on desktop; mobile is occasional." },
       reach: { value: 50, rationale: "3 clients, but execs view on phones." },
@@ -466,7 +473,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 4,
     confidence: 0.89,
-    complianceFlag: false,
+    userType: "Operations Lead",
     priority: {
       impact: { value: 60, rationale: "Unlocks automation downstream of monitoring." },
       reach: { value: 50, rationale: "4 technical clients." },
@@ -495,7 +502,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 6,
     confidence: 0.91,
-    complianceFlag: false,
+    userType: "Client Admin",
     priority: {
       impact: { value: 60, rationale: "Speeds up daily triage." },
       reach: { value: 70, rationale: "Most monitoring users." },
@@ -524,7 +531,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 2,
     confidence: 0.74,
-    complianceFlag: false,
+    userType: "Exec Sponsor",
     priority: {
       impact: { value: 50, rationale: "Useful for periodic data cleanup." },
       reach: { value: 30, rationale: "2 mentions." },
@@ -553,7 +560,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 4,
     confidence: 0.86,
-    complianceFlag: false,
+    userType: "Risk Analyst",
     priority: {
       impact: { value: 55, rationale: "Faster alert response." },
       reach: { value: 55, rationale: "4 clients, Slack-using." },
@@ -582,7 +589,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Read.AI",
     frequency: 3,
     confidence: 0.8,
-    complianceFlag: false,
+    userType: "KYC Analyst",
     priority: {
       impact: { value: 65, rationale: "Removes manual conversion for non-EUR clients." },
       reach: { value: 45, rationale: "3 non-EUR clients." },
@@ -611,7 +618,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 3,
     confidence: 0.82,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 70, rationale: "Critical for audit defensibility." },
       reach: { value: 45, rationale: "Compliance + risk teams." },
@@ -640,7 +647,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 2,
     confidence: 0.68,
-    complianceFlag: false,
+    userType: "Operations Lead",
     priority: {
       impact: { value: 30, rationale: "Helps new users; docs cover this elsewhere." },
       reach: { value: 25, rationale: "2 mentions." },
@@ -669,7 +676,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 3,
     confidence: 0.85,
-    complianceFlag: false,
+    userType: "Client Admin",
     priority: {
       impact: { value: 45, rationale: "Reduces support tickets about rate limits." },
       reach: { value: 40, rationale: "API-using clients." },
@@ -698,7 +705,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Read.AI",
     frequency: 3,
     confidence: 0.88,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 78, rationale: "Closes a compliance gap when rules tighten." },
       reach: { value: 50, rationale: "Compliance-driven clients." },
@@ -727,7 +734,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 4,
     confidence: 0.87,
-    complianceFlag: false,
+    userType: "Exec Sponsor",
     priority: {
       impact: { value: 70, rationale: "More precise targeting reduces false positives." },
       reach: { value: 55, rationale: "4 clients with segmentation strategy." },
@@ -756,7 +763,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 2,
     confidence: 0.79,
-    complianceFlag: true,
+    userType: "Compliance Officer",
     priority: {
       impact: { value: 60, rationale: "Important for enterprise security posture." },
       reach: { value: 30, rationale: "2 enterprise-tier clients." },
@@ -785,7 +792,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Email",
     frequency: 5,
     confidence: 0.72,
-    complianceFlag: false,
+    userType: "Risk Analyst",
     priority: {
       impact: { value: 55, rationale: "Perception issue impacting NPS." },
       reach: { value: 70, rationale: "All portal users." },
@@ -814,7 +821,7 @@ export const MOCK_REQUESTS: RequestRecord[] = [
     primarySource: "Teams",
     frequency: 1,
     confidence: 0.55,
-    complianceFlag: false,
+    userType: "KYC Analyst",
     priority: {
       impact: { value: 20, rationale: "Single requester." },
       reach: { value: 15, rationale: "1 mention." },

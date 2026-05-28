@@ -14,12 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ShieldAlert,
   Search,
   GitMerge,
   Trash2,
   Send,
   ArrowUpDown,
+  Users,
 } from "lucide-react";
 import {
   MOCK_REQUESTS,
@@ -27,6 +27,7 @@ import {
   type RequestRecord,
   type Status,
   type ProductArea,
+  type UserType,
 } from "@/lib/mock-requests";
 import { SourceBadge } from "@/components/signal/SourceBadge";
 import { PriorityBar } from "@/components/signal/PriorityBar";
@@ -66,8 +67,26 @@ const AREAS: ProductArea[] = [
   "Transaction Monitoring",
   "Risk Engine",
   "Client Portal",
-  "Admin Console",
 ];
+
+const USER_TYPES: UserType[] = [
+  "Compliance Officer",
+  "Risk Analyst",
+  "KYC Analyst",
+  "Operations Lead",
+  "Client Admin",
+  "Exec Sponsor",
+];
+
+const USER_TYPE_TONE: Record<UserType, string> = {
+  "Compliance Officer": "border-destructive/40 text-destructive",
+  "Risk Analyst": "border-chart-4/40 text-chart-4",
+  "KYC Analyst": "border-chart-2/40 text-chart-2",
+  "Operations Lead": "border-chart-3/40 text-chart-3",
+  "Client Admin": "border-chart-5/40 text-chart-5",
+  "Exec Sponsor": "border-primary/40 text-primary",
+};
+
 
 type SortKey = "priority" | "frequency" | "confidence" | "created";
 
@@ -82,7 +101,7 @@ function SignalDashboard() {
   // filters
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
-  const [complianceOnly, setComplianceOnly] = useState(false);
+  const [userTypeFilter, setUserTypeFilter] = useState<UserType | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("priority");
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
@@ -155,7 +174,7 @@ function SignalDashboard() {
   const visible = useMemo(() => {
     let list = requests.filter((r) => r.status === tab);
     if (areaFilter !== "all") list = list.filter((r) => r.productArea === areaFilter);
-    if (complianceOnly) list = list.filter((r) => r.complianceFlag);
+    if (userTypeFilter !== "all") list = list.filter((r) => r.userType === userTypeFilter);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -178,12 +197,17 @@ function SignalDashboard() {
       }
     });
     return list;
-  }, [requests, tab, areaFilter, complianceOnly, query, sortKey]);
+  }, [requests, tab, areaFilter, userTypeFilter, query, sortKey]);
 
   const newCount = requests.filter((r) => r.status === "new").length;
-  const flaggedCount = requests.filter(
-    (r) => r.complianceFlag && r.status === "new",
-  ).length;
+  const topUserType = (() => {
+    const counts = new Map<UserType, number>();
+    requests
+      .filter((r) => r.status === "new")
+      .forEach((r) => counts.set(r.userType, (counts.get(r.userType) ?? 0) + 1));
+    const entries = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    return entries[0] ? { type: entries[0][0], n: entries[0][1] } : null;
+  })();
   const avgConf =
     requests.filter((r) => r.status === "new").reduce((s, r) => s + r.confidence, 0) /
     Math.max(1, newCount);
@@ -213,9 +237,8 @@ function SignalDashboard() {
           <Stat label="New this week" value={newCount.toString()} />
           <Stat label="Avg confidence" value={`${Math.round(avgConf * 100)}%`} />
           <Stat
-            label="Compliance flagged"
-            value={flaggedCount.toString()}
-            accent={flaggedCount > 0}
+            label="Top user type"
+            value={topUserType ? `${topUserType.type} · ${topUserType.n}` : "—"}
           />
         </>
       }
@@ -267,15 +290,23 @@ function SignalDashboard() {
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant={complianceOnly ? "default" : "outline"}
-          size="sm"
-          className="h-8 gap-1.5"
-          onClick={() => setComplianceOnly((c) => !c)}
+        <Select
+          value={userTypeFilter}
+          onValueChange={(v) => setUserTypeFilter(v as UserType | "all")}
         >
-          <ShieldAlert className="h-3.5 w-3.5" />
-          Compliance only
-        </Button>
+          <SelectTrigger className="h-8 w-52 text-sm">
+            <Users className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All user types</SelectItem>
+            {USER_TYPES.map((u) => (
+              <SelectItem key={u} value={u}>
+                {u}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="ml-auto flex items-center gap-2">
           <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
           <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
@@ -360,7 +391,7 @@ function SignalDashboard() {
                   key={r.id}
                   className={`border-b cursor-pointer transition-colors ${
                     checked ? "bg-primary/5" : "hover:bg-accent/40"
-                  } ${r.complianceFlag ? "border-l-2 border-l-destructive/50" : ""}`}
+                  }`}
                   onClick={() => setOpenId(r.id)}
                 >
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -384,12 +415,12 @@ function SignalDashboard() {
                   <td className="px-2 py-3">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{r.title}</span>
-                      {r.complianceFlag && (
-                        <Badge variant="destructive" className="gap-1 font-normal text-[10px] py-0 h-4">
-                          <ShieldAlert className="h-2.5 w-2.5" />
-                          Compliance
-                        </Badge>
-                      )}
+                      <Badge
+                        variant="outline"
+                        className={`font-normal text-[10px] py-0 h-4 ${USER_TYPE_TONE[r.userType]}`}
+                      >
+                        {r.userType}
+                      </Badge>
                       {r.jiraKey && (
                         <span className="font-mono text-[10px] text-muted-foreground">
                           {r.jiraKey}

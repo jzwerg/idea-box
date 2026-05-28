@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { ShieldAlert, ExternalLink, Send, X } from "lucide-react";
+import { ExternalLink, Send, X, User } from "lucide-react";
 import {
   compositeScore,
   WEIGHTS,
@@ -71,12 +71,10 @@ export function DetailDrawer({ request, onClose, onUpdate, onDismiss, onPush }: 
                 <span>{local.id}</span>
                 <span>·</span>
                 <span>{local.productArea}</span>
-                {local.complianceFlag && (
-                  <Badge variant="destructive" className="gap-1 font-normal">
-                    <ShieldAlert className="h-3 w-3" />
-                    Compliance
-                  </Badge>
-                )}
+                <Badge variant="outline" className="gap-1 font-normal">
+                  <User className="h-3 w-3" />
+                  {local.userType}
+                </Badge>
               </div>
               <Input
                 value={local.title}
