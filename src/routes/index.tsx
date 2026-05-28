@@ -27,6 +27,7 @@ import {
   type RequestRecord,
   type Status,
   type ProductArea,
+  type UserType,
 } from "@/lib/mock-requests";
 import { SourceBadge } from "@/components/signal/SourceBadge";
 import { PriorityBar } from "@/components/signal/PriorityBar";
