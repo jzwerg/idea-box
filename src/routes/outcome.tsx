@@ -286,6 +286,3 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-// Re-export for unused import safety
-export { Send, Trash2 };
