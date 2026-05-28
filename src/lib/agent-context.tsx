@@ -8,6 +8,27 @@ import {
   type ReactNode,
 } from "react";
 import { WEIGHTS as DEFAULT_WEIGHTS } from "./mock-requests";
+import type { TeachAction } from "./teach";
+
+export interface LearnedRule {
+  id: string;
+  rule: string;
+  sourceAction: TeachAction;
+  sourceRequestId?: string;
+  sourceTitle?: string;
+  createdAt: string;
+  enabled: boolean;
+}
+
+export interface Proposal {
+  id: string;
+  rule: string;
+  sourceAction: TeachAction;
+  sourceRequestId?: string;
+  sourceTitle?: string;
+  createdAt: string;
+}
+
 
 export type Weights = {
   impact: number;
@@ -44,7 +65,15 @@ interface AgentCtx {
   status: "idle" | "running";
   runAgent: (opts?: { trigger?: "auto" | "manual"; instructions?: string }) => void;
   registerApply: (fn: AgentApplyFn | null) => void;
+  learnedRules: LearnedRule[];
+  pendingProposals: Proposal[];
+  proposeRule: (p: Omit<Proposal, "id" | "createdAt">) => void;
+  acceptProposal: (id: string, finalRule?: string) => void;
+  dismissProposal: (id: string) => void;
+  toggleLearnedRule: (id: string) => void;
+  removeLearnedRule: (id: string) => void;
 }
+
 
 const Ctx = createContext<AgentCtx | null>(null);
 
@@ -56,7 +85,57 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const [instructions, setInstructions] = useState<string>(DEFAULT_INSTRUCTIONS);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [status, setStatus] = useState<"idle" | "running">("idle");
+  const [learnedRules, setLearnedRules] = useState<LearnedRule[]>([]);
+  const [pendingProposals, setPendingProposals] = useState<Proposal[]>([]);
   const applyRef = useRef<AgentApplyFn | null>(null);
+
+  const proposeRule = useCallback((p: Omit<Proposal, "id" | "createdAt">) => {
+    const proposal: Proposal = {
+      ...p,
+      id: `prop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setPendingProposals((arr) => [proposal, ...arr].slice(0, 50));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("agent:proposal", { detail: proposal }));
+    }
+  }, []);
+
+  const acceptProposal = useCallback((id: string, finalRule?: string) => {
+    setPendingProposals((arr) => {
+      const p = arr.find((x) => x.id === id);
+      if (p) {
+        setLearnedRules((rules) => [
+          {
+            id: `rule-${Date.now()}`,
+            rule: finalRule?.trim() || p.rule,
+            sourceAction: p.sourceAction,
+            sourceRequestId: p.sourceRequestId,
+            sourceTitle: p.sourceTitle,
+            createdAt: new Date().toISOString(),
+            enabled: true,
+          },
+          ...rules,
+        ]);
+      }
+      return arr.filter((x) => x.id !== id);
+    });
+  }, []);
+
+  const dismissProposal = useCallback((id: string) => {
+    setPendingProposals((arr) => arr.filter((x) => x.id !== id));
+  }, []);
+
+  const toggleLearnedRule = useCallback((id: string) => {
+    setLearnedRules((rs) =>
+      rs.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
+    );
+  }, []);
+
+  const removeLearnedRule = useCallback((id: string) => {
+    setLearnedRules((rs) => rs.filter((r) => r.id !== id));
+  }, []);
+
 
   const registerApply = useCallback((fn: AgentApplyFn | null) => {
     applyRef.current = fn;
@@ -92,12 +171,20 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       ]);
 
       const duration = 1400 + Math.floor(Math.random() * 1600);
+      const learnedText = learnedRules
+        .filter((r) => r.enabled)
+        .map((r) => r.rule)
+        .join("\n");
+      const composedInstructions = learnedText
+        ? `${instructions}\n\n[Learned rules]\n${learnedText}`
+        : instructions;
       setTimeout(() => {
         const result = applyRef.current?.({
           weights: snapshot,
-          instructions,
+          instructions: composedInstructions,
           runInstructions,
         });
+
         setRuns((rs) =>
           rs.map((r) =>
             r.id === id
@@ -114,7 +201,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         setStatus("idle");
       }, duration);
     },
-    [weights, instructions],
+    [weights, instructions, learnedRules],
   );
 
   // Auto-trigger on batch landing from any source
@@ -137,12 +224,21 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         status,
         runAgent,
         registerApply,
+        learnedRules,
+        pendingProposals,
+        proposeRule,
+        acceptProposal,
+        dismissProposal,
+        toggleLearnedRule,
+        removeLearnedRule,
       }}
     >
       {children}
     </Ctx.Provider>
   );
 }
+
+
 
 export function useAgent() {
   const v = useContext(Ctx);
