@@ -93,8 +93,9 @@ function SignalDashboard() {
   const [requests, setRequests] = useState<RequestRecord[]>(MOCK_REQUESTS);
   const [tab, setTab] = useState<Status>("new");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [openId, setOpenId] = useState<string | null>(null);
   const [pushOpen, setPushOpen] = useState(false);
+  const [pushTargets, setPushTargets] = useState<string[]>([]);
+  const [brainstormOpen, setBrainstormOpen] = useState(false);
   const [pushTargets, setPushTargets] = useState<string[]>([]);
 
   const [query, setQuery] = useState("");
