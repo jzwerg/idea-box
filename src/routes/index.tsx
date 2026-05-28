@@ -246,7 +246,7 @@ function SignalDashboard() {
           return b.createdAt.localeCompare(a.createdAt);
         case "priority":
         default:
-          return compositeScore(b.priority) - compositeScore(a.priority);
+          return compositeWith(b.priority, weights) - compositeWith(a.priority, weights);
       }
     });
     return list;
@@ -436,7 +436,7 @@ function SignalDashboard() {
               </tr>
             )}
             {visible.map((r, idx) => {
-              const score = compositeScore(r.priority);
+              const score = compositeWith(r.priority, weights);
               const checked = selectedIds.has(r.id);
               const uniqueSources = Array.from(new Set(r.mentions.map((m) => m.source)));
               return (
