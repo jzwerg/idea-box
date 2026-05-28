@@ -14,12 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ShieldAlert,
   Search,
   GitMerge,
   Trash2,
   Send,
   ArrowUpDown,
+  Users,
 } from "lucide-react";
 import {
   MOCK_REQUESTS,
