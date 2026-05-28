@@ -121,5 +121,6 @@ function RootComponent() {
           <Outlet />
         </AgentProvider>
       </SourcesProvider>
+    </QueryClientProvider>
   );
 }
