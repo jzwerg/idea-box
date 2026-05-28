@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { SourcesProvider } from "@/lib/sources-context";
 
 function NotFoundComponent() {
   return (
