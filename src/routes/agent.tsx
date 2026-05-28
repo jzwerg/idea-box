@@ -279,9 +279,140 @@ function AgentPage() {
               </div>
             )}
           </section>
-        </div>
       </div>
-      <Toaster />
+      <LearnedRulesSection
+        learnedRules={learnedRules}
+        pendingProposals={pendingProposals}
+        onAccept={acceptProposal}
+        onDismiss={dismissProposal}
+        onToggle={toggleLearnedRule}
+        onRemove={removeLearnedRule}
+      />
     </SignalShell>
   );
+}
+
+function LearnedRulesSection({
+  learnedRules,
+  pendingProposals,
+  onAccept,
+  onDismiss,
+  onToggle,
+  onRemove,
+}: {
+  learnedRules: ReturnType<typeof useAgent>["learnedRules"];
+  pendingProposals: ReturnType<typeof useAgent>["pendingProposals"];
+  onAccept: (id: string, rule?: string) => void;
+  onDismiss: (id: string) => void;
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <div className="px-6 pb-10 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-6 max-w-[1400px]">
+      <section className="rounded-lg border bg-card/40">
+        <div className="px-5 py-3 border-b flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Inbox className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold">Pending teachings</h2>
+          </div>
+          <Badge variant="outline" className="font-mono text-[10px] h-5">
+            {pendingProposals.length}
+          </Badge>
+        </div>
+        {pendingProposals.length === 0 ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            Nothing pending. Actions on staging will propose rules here.
+          </div>
+        ) : (
+          <div className="divide-y">
+            {pendingProposals.map((p) => (
+              <div key={p.id} className="px-5 py-3 space-y-2">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <Badge variant="outline" className="h-4 text-[10px]">
+                    {p.sourceAction}
+                  </Badge>
+                  {p.sourceTitle && (
+                    <span className="italic text-muted-foreground/80 truncate">
+                      from "{p.sourceTitle}"
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-mono leading-relaxed">{p.rule}</p>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => onDismiss(p.id)}
+                  >
+                    <X className="h-3 w-3 mr-1" /> Skip
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs gap-1.5"
+                    onClick={() => onAccept(p.id)}
+                  >
+                    <Plus className="h-3 w-3" /> Add rule
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border bg-card/40">
+        <div className="px-5 py-3 border-b flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold">Learned rules</h2>
+          </div>
+          <Badge variant="outline" className="font-mono text-[10px] h-5">
+            {learnedRules.filter((r) => r.enabled).length}/{learnedRules.length} active
+          </Badge>
+        </div>
+        {learnedRules.length === 0 ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            No learned rules yet. The agent grows smarter as you act on staging.
+          </div>
+        ) : (
+          <div className="divide-y">
+            {learnedRules.map((r) => (
+              <div key={r.id} className="px-5 py-3 flex items-start gap-3">
+                <Switch
+                  checked={r.enabled}
+                  onCheckedChange={() => onToggle(r.id)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-xs leading-relaxed ${
+                      r.enabled ? "text-foreground" : "text-muted-foreground line-through"
+                    }`}
+                  >
+                    {r.rule}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <Badge variant="outline" className="h-4 text-[10px]">
+                      {r.sourceAction}
+                    </Badge>
+                    <span>{new Date(r.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onRemove(r.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label="Delete rule"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 }
