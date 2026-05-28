@@ -389,6 +389,13 @@ function SignalDashboard() {
       {tab === "new" && (
         <div className="border-b bg-background/60 px-6 py-2.5 flex items-center gap-3 flex-wrap">
           <ViewsBar />
+          <button
+            onClick={() => setBrainstormOpen(true)}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-amber-500/40 px-2.5 py-1 text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+            title="Brainstorm (B)"
+          >
+            <Lightbulb className="h-3 w-3" /> Brainstorm
+          </button>
           {hasManualOrdering && (
             <button
               onClick={clearManualOrdering}
