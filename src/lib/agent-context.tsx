@@ -233,11 +233,11 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         removeLearnedRule,
       }}
     >
-
-    >
       {children}
     </Ctx.Provider>
   );
+}
+
 }
 
 export function useAgent() {
