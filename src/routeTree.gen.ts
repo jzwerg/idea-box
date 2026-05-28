@@ -9,19 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentRouteImport } from './routes/agent'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as IngestionIndexRouteImport } from './routes/ingestion.index'
 import { Route as IngestionSourceIdRouteImport } from './routes/ingestion.$sourceId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AgentRoute = AgentRouteImport.update({
   id: '/agent',
   path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IngestionIndexRoute = IngestionIndexRouteImport.update({
@@ -71,18 +71,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/agent': {
       id: '/agent'
       path: '/agent'
       fullPath: '/agent'
       preLoaderRoute: typeof AgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ingestion/': {
@@ -93,24 +93,6 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof rootRouteImport
     }
     '/ingestion/$sourceId': {
-      id: '/ingestion/$sourceId'
-      path: '/ingestion/$sourceId'
-      fullPath: '/ingestion/$sourceId'
-      preLoaderRoute: typeof IngestionSourceIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AgentRoute: AgentRoute,
-  IngestionSourceIdRoute: IngestionSourceIdRoute,
-  IngestionIndexRoute: IngestionIndexRoute,
-}
-export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
       id: '/ingestion/$sourceId'
       path: '/ingestion/$sourceId'
       fullPath: '/ingestion/$sourceId'

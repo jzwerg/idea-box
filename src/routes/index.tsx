@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,9 +34,10 @@ import { PriorityBar } from "@/components/signal/PriorityBar";
 import { DetailDrawer } from "@/components/signal/DetailDrawer";
 import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
 import { SignalShell } from "@/components/signal/SignalShell";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
+import { SignalShell } from "@/components/signal/SignalShell";
+import { Link } from "@tanstack/react-router";
+import { Brain } from "lucide-react";
+import { useAgent, compositeWith } from "@/lib/agent-context";
     meta: [
       { title: "Signal — Feature request triage" },
       {
