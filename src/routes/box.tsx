@@ -314,7 +314,7 @@ function BoxPage() {
     }
     if (pinnedOnly) list = list.filter((r) => !!pinned[r.id]);
     if (hasNotesOnly) list = list.filter((r) => !!(notes[r.id] && notes[r.id].trim()));
-    if (activeView && isIdeation) {
+    if (activeView && !isStaging) {
       list = list.filter((r) =>
         matchesView(activeView, {
           title: r.title,
