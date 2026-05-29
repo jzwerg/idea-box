@@ -20,6 +20,11 @@ import {
   RotateCcw,
   MoonStar,
   ArchiveRestore,
+  Lightbulb,
+  Rocket,
+  Pin,
+  StickyNote,
+  type LucideIcon,
 } from "lucide-react";
 import {
   DndContext,
@@ -36,6 +41,11 @@ import {
 } from "@dnd-kit/sortable";
 import {
   MOCK_REQUESTS,
+  getClient,
+  getApp,
+  getRevenuePotential,
+  isCriticalDissatisfaction,
+  REVENUE_ORDER,
   type RequestRecord,
   type ProductArea,
   type UserType,
@@ -48,7 +58,7 @@ import { StagingRow } from "@/components/signal/StagingRow";
 import { ViewsBar } from "@/components/signal/ViewsBar";
 import { ParkedBadge } from "@/components/signal/ParkedBadge";
 import { compositeWith, useAgent } from "@/lib/agent-context";
-import { useStaging, matchesView } from "@/lib/staging-context";
+import { useStaging, matchesView, type GroupBy } from "@/lib/staging-context";
 import { buildProposedRule } from "@/lib/teach";
 
 export const Route = createFileRoute("/box")({
@@ -86,7 +96,7 @@ type Stage = "ideation" | "pushed" | "dismissed";
 const STAGES: Array<{
   key: Stage;
   label: string;
-  emoji: string;
+  Icon: LucideIcon;
   status: Status;
   tone: string;
   activeTone: string;
@@ -94,7 +104,7 @@ const STAGES: Array<{
   {
     key: "ideation",
     label: "Ideation",
-    emoji: "💡",
+    Icon: Lightbulb,
     status: "new",
     tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
     activeTone: "bg-card text-foreground border border-border shadow-sm",
@@ -102,7 +112,7 @@ const STAGES: Array<{
   {
     key: "pushed",
     label: "Pushed",
-    emoji: "🚀",
+    Icon: Rocket,
     status: "pushed",
     tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
     activeTone: "bg-card text-foreground border border-border shadow-sm",
@@ -110,7 +120,7 @@ const STAGES: Array<{
   {
     key: "dismissed",
     label: "Dismissed",
-    emoji: "🗑️",
+    Icon: Trash2,
     status: "dismissed",
     tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
     activeTone: "bg-card text-foreground border border-border shadow-sm",
@@ -121,6 +131,8 @@ function BoxPage() {
   const [requests, setRequests] = useState<RequestRecord[]>(MOCK_REQUESTS);
   const [stage, setStage] = useState<Stage>("ideation");
   const [includeParked, setIncludeParked] = useState(false);
+  const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [hasNotesOnly, setHasNotesOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
   const [pushOpen, setPushOpen] = useState(false);
