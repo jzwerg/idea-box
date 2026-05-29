@@ -126,6 +126,9 @@ function BoxPage() {
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
   const [userTypeFilter, setUserTypeFilter] = useState<UserType | "all">("all");
+  const [flagFilter, setFlagFilter] = useState<
+    "all" | "critical" | "high" | "medium" | "low" | "dissatisfaction"
+  >("all");
 
   const { weights, registerApply, proposeRule } = useAgent();
   const {
