@@ -88,9 +88,10 @@ export function FloatingAgent() {
         onClick={() => setOpen(true)}
         aria-label="Open Brainstorm (B)"
         title="Brainstorm — press B"
-        className="fixed bottom-5 right-5 z-30 h-11 w-11 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:border-foreground/30 hover:bg-accent transition-all flex items-center justify-center group"
+        className="fixed bottom-5 right-5 z-30 h-11 pl-3.5 pr-4 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:border-foreground/30 hover:bg-accent transition-all flex items-center justify-center gap-2 group"
       >
         <Lightbulb className="h-[18px] w-[18px] text-foreground/80 group-hover:text-foreground transition-colors" />
+        <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">Brainstorm</span>
       </button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
