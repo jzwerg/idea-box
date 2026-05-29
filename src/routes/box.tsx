@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowLeftRight, ChevronDown, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -145,8 +152,24 @@ function BoxPage() {
     hasManualOrdering,
     parkRequest,
     unparkRequest,
+    setActiveView,
   } = useStaging();
   const activeView = views.find((v) => v.id === activeViewId) ?? views[0];
+
+  // Scroll detection — when stage chips scroll out of the sticky header,
+  // show a compact stage/view picker in the header itself.
+  const chipsSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const el = chipsSentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setCollapsed(!entry.isIntersecting),
+      { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     registerApply(({ instructions, runInstructions }) => {
@@ -429,17 +452,42 @@ function BoxPage() {
 
   const isSpark = stage === "spark";
 
+  const currentStageInfo = STAGES.find((s) => s.key === stage)!;
+  const visibleViews = views.filter(
+    (v) => v.builtin || !v.stage || v.stage === stage,
+  );
+
   return (
     <SignalShell
-      rightSlot={
-        <>
-          <Stat label="In box" value={(counts.shape + counts.launch + counts.shelve).toString()} />
-          <Stat label="Active" value={counts.shape.toString()} accent />
-        </>
+      headerInline={
+        collapsed && !isSpark ? (
+          <CompactPicker
+            stage={stage}
+            stageLabel={currentStageInfo.label}
+            StageIcon={currentStageInfo.Icon}
+            onStageChange={(k) => {
+              setStage(k);
+              setSelectedIds(new Set());
+            }}
+            viewName={activeView?.name ?? "All"}
+            views={visibleViews.map((v) => ({ id: v.id, name: v.name }))}
+            onViewChange={setActiveView}
+          />
+        ) : collapsed && isSpark ? (
+          <CompactPicker
+            stage={stage}
+            stageLabel={currentStageInfo.label}
+            StageIcon={currentStageInfo.Icon}
+            onStageChange={(k) => {
+              setStage(k);
+              setSelectedIds(new Set());
+            }}
+          />
+        ) : null
       }
     >
       {/* Stage chips — outside the box, on the page surface */}
-      <div className="px-6 pt-6 pb-3">
+      <div ref={chipsSentinelRef} className="px-6 pt-6 pb-3">
         <div className="flex items-center gap-2 flex-wrap">
           {STAGES.map((s) => {
             const active = stage === s.key;
@@ -470,9 +518,12 @@ function BoxPage() {
         </div>
       </div>
 
+
       {/* The Box — bordered surface that holds all stage content */}
-      <div className="px-6 pb-6 flex-1 min-h-0">
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
+      {/* The Box — bordered surface that holds all stage content */}
+      <div className="px-6 pb-6">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+
           {isSpark ? (
             <StagingView />
           ) : (
@@ -624,10 +675,11 @@ function BoxPage() {
               )}
 
               {/* Table */}
-              <div className="flex-1 overflow-auto">
+              <div>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                   <table className="w-full text-sm">
-                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
+                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 sticky top-[57px] z-20 bg-card">
+
                       <tr>
                         <th className="w-8 px-2 py-2.5"></th>
                         <th className="w-8 px-1 py-2.5"></th>
@@ -706,13 +758,79 @@ function BoxPage() {
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function CompactPicker({
+  stage,
+  stageLabel,
+  StageIcon,
+  onStageChange,
+  viewName,
+  views,
+  onViewChange,
+}: {
+  stage: Stage;
+  stageLabel: string;
+  StageIcon: LucideIcon;
+  onStageChange: (k: Stage) => void;
+  viewName?: string;
+  views?: Array<{ id: string; name: string }>;
+  onViewChange?: (id: string) => void;
+}) {
+  const [mode, setMode] = useState<"stage" | "view">("stage");
+  // Force stage mode when view picker isn't available (e.g. Spark)
+  const effectiveMode = views && views.length > 0 ? mode : "stage";
   return (
-    <div className="flex flex-col items-end">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-      <span className={`font-mono tabular-nums font-semibold ${accent ? "text-primary" : "text-foreground"}`}>
-        {value}
-      </span>
+    <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-200">
+      <span className="hidden sm:inline text-border mx-1">/</span>
+      {views && views.length > 0 && (
+        <button
+          onClick={() => setMode((m) => (m === "stage" ? "view" : "stage"))}
+          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          title={effectiveMode === "stage" ? "Switch to view picker" : "Switch to stage picker"}
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2.25} />
+        </button>
+      )}
+      {effectiveMode === "stage" ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
+            <StageIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
+            <span className="font-display">{stageLabel}</span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" sideOffset={6}>
+            {STAGES.map((s) => (
+              <DropdownMenuItem
+                key={s.key}
+                onSelect={() => onStageChange(s.key)}
+                className={`gap-2 ${s.key === stage ? "font-medium" : ""}`}
+              >
+                <s.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                <span>{s.label}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
+            <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />
+            <span>{viewName}</span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" sideOffset={6}>
+            {views?.map((v) => (
+              <DropdownMenuItem
+                key={v.id}
+                onSelect={() => onViewChange?.(v.id)}
+                className={v.name === viewName ? "font-medium" : ""}
+              >
+                {v.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
+
