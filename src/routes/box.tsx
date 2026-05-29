@@ -56,6 +56,7 @@ import { DetailDrawer } from "@/components/signal/DetailDrawer";
 import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
 import { SignalShell } from "@/components/signal/SignalShell";
 import { StagingRow } from "@/components/signal/StagingRow";
+import { StagingView } from "@/components/signal/StagingView";
 import { ViewsBar } from "@/components/signal/ViewsBar";
 import { ParkedBadge } from "@/components/signal/ParkedBadge";
 import { compositeWith, useAgent } from "@/lib/agent-context";
