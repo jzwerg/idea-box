@@ -24,7 +24,7 @@ function SourceDetailPage() {
   if (!source) throw notFound();
 
   const totalScanned = source.runs.reduce((s, r) => s + r.itemsScanned, 0);
-  const totalPushed = source.runs.reduce((s, r) => s + r.pushedToStaging, 0);
+  const totalPushed = source.runs.reduce((s, r) => s + r.pushedToSpark, 0);
 
   return (
     <div className="px-6 py-6 max-w-4xl">

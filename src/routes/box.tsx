@@ -94,7 +94,7 @@ const USER_TYPES: UserType[] = [
   "Exec Sponsor",
 ];
 
-type Stage = "staging" | "ideation" | "pushed" | "dismissed";
+type Stage = "spark" | "shape" | "launch" | "shelve";
 
 const STAGE_TONE = {
   idle: "bg-chip text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent",
@@ -107,15 +107,15 @@ const STAGES: Array<{
   Icon: LucideIcon;
   status: Status | null;
 }> = [
-  { key: "staging", label: "Staging", Icon: Layers, status: null },
-  { key: "ideation", label: "Ideation", Icon: Lightbulb, status: "new" },
-  { key: "pushed", label: "Pushed", Icon: Rocket, status: "pushed" },
-  { key: "dismissed", label: "Dismissed", Icon: Trash2, status: "dismissed" },
+  { key: "spark", label: "Spark", Icon: Layers, status: null },
+  { key: "shape", label: "Shape", Icon: Lightbulb, status: "new" },
+  { key: "launch", label: "Launch", Icon: Rocket, status: "launch" },
+  { key: "shelve", label: "Shelve", Icon: Trash2, status: "shelve" },
 ];
 
 function BoxPage() {
   const [requests, setRequests] = useState<RequestRecord[]>(MOCK_REQUESTS);
-  const [stage, setStage] = useState<Stage>("ideation");
+  const [stage, setStage] = useState<Stage>("shape");
   const [includeParked, setIncludeParked] = useState(false);
   const [pinnedOnly, setPinnedOnly] = useState(false);
   const [hasNotesOnly, setHasNotesOnly] = useState(false);
@@ -193,14 +193,14 @@ function BoxPage() {
 
   const dismiss = (id: string) => {
     const r = requests.find((x) => x.id === id);
-    update(id, { status: "dismissed" });
+    update(id, { status: "shelve" });
     setOpenId(null);
     setSelectedIds((s) => {
       const n = new Set(s);
       n.delete(id);
       return n;
     });
-    toast.success("Sent to Dismissed");
+    toast.success("Sent to Shelve");
     if (r) {
       const p = buildProposedRule("dismiss", r);
       if (p) proposeRule(p);
@@ -209,9 +209,9 @@ function BoxPage() {
 
   const bulkDismiss = () => {
     const ids = Array.from(selectedIds);
-    ids.forEach((id) => update(id, { status: "dismissed" }));
+    ids.forEach((id) => update(id, { status: "shelve" }));
     setSelectedIds(new Set());
-    toast.success(`${ids.length} dismissed`);
+    toast.success(`${ids.length} shelved`);
   };
 
   const bulkPark = () => {
@@ -232,7 +232,7 @@ function BoxPage() {
     const ids = Array.from(selectedIds);
     ids.forEach((id) => update(id, { status: "new", jiraKey: undefined }));
     setSelectedIds(new Set());
-    toast.success(`${ids.length} moved back to Ideation`);
+    toast.success(`${ids.length} moved back to Shape`);
   };
 
   const merge = () => {
@@ -248,7 +248,7 @@ function BoxPage() {
       description: keeper.description + "\n\nMerged from: " + rest.map((r) => r.title).join(", "),
     });
     setRequests((rs) =>
-      rs.map((r) => (rest.some((x) => x.id === r.id) ? { ...r, status: "dismissed" } : r)),
+      rs.map((r) => (rest.some((x) => x.id === r.id) ? { ...r, status: "shelve" } : r)),
     );
     setSelectedIds(new Set([keeper.id]));
     toast.success(`Merged ${ids.length}`);
@@ -262,9 +262,9 @@ function BoxPage() {
   const confirmPush = (project: string) => {
     pushTargets.forEach((id, idx) => {
       const key = `${project}-${1240 + idx}`;
-      update(id, { status: "pushed", jiraKey: key });
+      update(id, { status: "launch", jiraKey: key });
     });
-    toast.success(`${pushTargets.length} shipped to Pushed`);
+    toast.success(`${pushTargets.length} shipped to Launch`);
     const r = requests.find((x) => x.id === pushTargets[0]);
     if (r) {
       const p = buildProposedRule("push", r);
@@ -278,20 +278,20 @@ function BoxPage() {
 
   const counts = useMemo(
     () => ({
-      staging: 10, // mock pull count — see StagingView
-      ideation: requests.filter((r) => r.status === "new" && !parked[r.id]).length,
-      pushed: requests.filter((r) => r.status === "pushed").length,
-      dismissed: requests.filter((r) => r.status === "dismissed").length,
+      spark: 10, // mock pull count — see StagingView
+      shape: requests.filter((r) => r.status === "new" && !parked[r.id]).length,
+      launch: requests.filter((r) => r.status === "launch").length,
+      shelve: requests.filter((r) => r.status === "shelve").length,
       parked: requests.filter((r) => r.status === "new" && parked[r.id]).length,
     }),
     [requests, parked],
   );
 
-  const isIdeation = stage === "ideation";
+  const isShape = stage === "shape";
 
   const visible = useMemo(() => {
     let list = requests.filter((r) => {
-      if (stage === "ideation") {
+      if (stage === "shape") {
         if (r.status !== "new") return false;
         return includeParked ? true : !parked[r.id];
       }
@@ -314,7 +314,7 @@ function BoxPage() {
     }
     if (pinnedOnly) list = list.filter((r) => !!pinned[r.id]);
     if (hasNotesOnly) list = list.filter((r) => !!(notes[r.id] && notes[r.id].trim()));
-    if (activeView && stage !== "staging") {
+    if (activeView && stage !== "spark") {
       list = list.filter((r) =>
         matchesView(activeView, {
           title: r.title,
@@ -328,7 +328,7 @@ function BoxPage() {
         }),
       );
     }
-    if (isIdeation) {
+    if (isShape) {
       list = [...list].sort((a, b) => {
         const pa = pinned[a.id] ? 1 : 0;
         const pb = pinned[b.id] ? 1 : 0;
@@ -358,7 +358,7 @@ function BoxPage() {
     tags,
     notes,
     parked,
-    isIdeation,
+    isShape,
     pinnedOnly,
     hasNotesOnly,
     flagFilter,
@@ -377,7 +377,7 @@ function BoxPage() {
   };
 
   const grouped = useMemo(() => {
-    if (!activeView || activeView.groupBy === "none" || !isIdeation) return null;
+    if (!activeView || activeView.groupBy === "none" || !isShape) return null;
     const gb = activeView.groupBy;
     const map = new Map<string, RequestRecord[]>();
     for (const r of visible) {
@@ -393,7 +393,7 @@ function BoxPage() {
     }
     return keys.map((k) => ({ key: k, items: map.get(k)! }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, activeView, isIdeation, tags]);
+  }, [visible, activeView, isShape, tags]);
 
 
   const allVisibleChecked = visible.length > 0 && visible.every((r) => selectedIds.has(r.id));
@@ -427,14 +427,14 @@ function BoxPage() {
 
   const visibleIds = visible.map((r) => r.id);
 
-  const isStaging = stage === "staging";
+  const isSpark = stage === "spark";
 
   return (
     <SignalShell
       rightSlot={
         <>
-          <Stat label="In box" value={(counts.ideation + counts.pushed + counts.dismissed).toString()} />
-          <Stat label="Active" value={counts.ideation.toString()} accent />
+          <Stat label="In box" value={(counts.shape + counts.launch + counts.shelve).toString()} />
+          <Stat label="Active" value={counts.shape.toString()} accent />
         </>
       }
     >
@@ -473,14 +473,14 @@ function BoxPage() {
       {/* The Box — bordered surface that holds all stage content */}
       <div className="px-6 pb-6 flex-1 min-h-0">
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
-          {isStaging ? (
+          {isSpark ? (
             <StagingView />
           ) : (
             <>
               {/* Views — sub-filters within a stage */}
               <div className="px-5 py-2.5 flex items-center gap-3 flex-wrap border-b border-border/60 bg-chip/60">
-                <ViewsBar currentStage={stage as "ideation" | "pushed" | "dismissed"} />
-                {isIdeation && (
+                <ViewsBar currentStage={stage as "shape" | "launch" | "shelve"} />
+                {isShape && (
                   <div className="ml-auto flex items-center gap-2">
                     {hasManualOrdering && (
                       <button
@@ -592,7 +592,7 @@ function BoxPage() {
                     <span className="text-muted-foreground ml-1.5">selected</span>
                   </span>
                   <div className="flex items-center gap-2">
-                    {isIdeation && (
+                    {isShape && (
                       <>
                         <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" disabled={selectedIds.size < 2} onClick={merge}>
                           <GitMerge className="h-3.5 w-3.5" /> Merge
@@ -614,9 +614,9 @@ function BoxPage() {
                         </Button>
                       </>
                     )}
-                    {!isIdeation && (
+                    {!isShape && (
                       <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkReopen}>
-                        <RotateCcw className="h-3.5 w-3.5" /> Move to Ideation
+                        <RotateCcw className="h-3.5 w-3.5" /> Move to Shape
                       </Button>
                     )}
                   </div>
@@ -648,9 +648,9 @@ function BoxPage() {
                       {visible.length === 0 && (
                         <tr>
                           <td colSpan={11} className="text-center py-20 text-muted-foreground text-sm">
-                            {stage === "ideation" && "Box is empty here. Try toggling a view or showing parked items."}
-                            {stage === "pushed" && "Nothing pushed yet. Ship something from Ideation."}
-                            {stage === "dismissed" && "No dismissed items."}
+                            {stage === "shape" && "Box is empty here. Try toggling a view or showing parked items."}
+                            {stage === "launch" && "Nothing launched yet. Ship something from Shape."}
+                            {stage === "shelve" && "No shelved items."}
                           </td>
                         </tr>
                       )}
@@ -671,9 +671,9 @@ function BoxPage() {
                             }
                             onOpen={() => setOpenId(r.id)}
                             showCheckbox={true}
-                            draggable={isIdeation && !includeParked}
+                            draggable={isShape && !includeParked}
                             parkedBadge={
-                              isIdeation && parked[r.id] ? (
+                              isShape && parked[r.id] ? (
                                 <ParkedBadge info={parked[r.id]} onUnpark={() => unparkRequest(r.id)} />
                               ) : null
                             }
