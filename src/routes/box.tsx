@@ -24,6 +24,7 @@ import {
   Rocket,
   Pin,
   StickyNote,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import {
