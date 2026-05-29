@@ -360,6 +360,7 @@ function BoxPage() {
     isIdeation,
     pinnedOnly,
     hasNotesOnly,
+    flagFilter,
   ]);
 
   const groupKeyOf = (r: RequestRecord, gb: GroupBy): string => {
