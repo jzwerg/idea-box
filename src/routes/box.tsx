@@ -152,7 +152,24 @@ function BoxPage() {
     hasManualOrdering,
     parkRequest,
     unparkRequest,
+    setActiveView,
   } = useStaging();
+  const activeView = views.find((v) => v.id === activeViewId) ?? views[0];
+
+  // Scroll detection — when stage chips scroll out of the sticky header,
+  // show a compact stage/view picker in the header itself.
+  const chipsSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const el = chipsSentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setCollapsed(!entry.isIntersecting),
+      { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const activeView = views.find((v) => v.id === activeViewId) ?? views[0];
 
   useEffect(() => {
