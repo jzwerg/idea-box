@@ -8,7 +8,14 @@ import {
   type ReactNode,
 } from "react";
 
-export type GroupBy = "none" | "userType" | "productArea" | "tag";
+export type GroupBy =
+  | "none"
+  | "userType"
+  | "productArea"
+  | "tag"
+  | "client"
+  | "app"
+  | "revenuePotential";
 export type ViewScope = "staging" | "outcome" | "all";
 export type ParkReason = "low-confidence" | "snoozed";
 
@@ -57,11 +64,14 @@ interface StagingState {
 
 const BUILTIN_VIEWS: SavedView[] = [
   { id: "all", name: "All", rule: "", groupBy: "none", scope: "staging", builtin: true },
-  { id: "pinned", name: "Pinned", rule: "__pinned__", groupBy: "none", scope: "staging", builtin: true },
-  { id: "notes", name: "Has notes", rule: "__has_notes__", groupBy: "none", scope: "all", builtin: true },
+  { id: "by-client", name: "By client", rule: "", groupBy: "client", scope: "staging", builtin: true },
+  { id: "by-app", name: "By app", rule: "", groupBy: "app", scope: "staging", builtin: true },
+  { id: "by-revenue", name: "By revenue", rule: "", groupBy: "revenuePotential", scope: "staging", builtin: true },
+  { id: "critical", name: "Critical dissatisfaction", rule: "__critical_dissatisfaction__", groupBy: "none", scope: "staging", builtin: true },
 ];
 
-const STORAGE_KEY = "signal.staging.v2";
+const STORAGE_KEY = "signal.staging.v3";
+
 
 // Seed a few parked items for the demo — gives the Parked tab content on first run.
 const SEED_PARKED: Record<string, ParkInfo> = {
