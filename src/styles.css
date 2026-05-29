@@ -5,9 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * IdeaBox — pastel sunset palette.
- * Warm, inviting, playful. Soft surfaces, vivid coral accents.
- * Heading: Sora. Body: Manrope.
+ * IdeaBox — Notion-style neutrals with a multi-hue accent palette.
+ * Flat surfaces, no gradient washes. Sora headings, Manrope body.
  */
 
 @theme inline {
@@ -58,87 +57,86 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 
-  /* Warm pastel surfaces */
-  --background: oklch(0.98 0.012 65);
-  --foreground: oklch(0.26 0.03 30);
-  --card: oklch(0.995 0.008 70);
-  --card-foreground: oklch(0.26 0.03 30);
-  --popover: oklch(0.995 0.008 70);
-  --popover-foreground: oklch(0.26 0.03 30);
+  /* Notion-style neutrals — warm but quiet */
+  --background: oklch(0.995 0.002 250);
+  --foreground: oklch(0.22 0.01 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.01 260);
 
-  /* Sunset coral primary */
-  --primary: oklch(0.7 0.18 35);
-  --primary-foreground: oklch(0.99 0.005 80);
+  /* Muted indigo primary (used sparingly for action) */
+  --primary: oklch(0.52 0.13 255);
+  --primary-foreground: oklch(0.99 0.005 250);
 
-  /* Soft peach secondary */
-  --secondary: oklch(0.94 0.04 55);
-  --secondary-foreground: oklch(0.32 0.05 35);
+  --secondary: oklch(0.96 0.005 250);
+  --secondary-foreground: oklch(0.28 0.015 260);
 
-  --muted: oklch(0.95 0.018 60);
-  --muted-foreground: oklch(0.52 0.04 40);
+  --muted: oklch(0.965 0.004 250);
+  --muted-foreground: oklch(0.52 0.015 260);
 
-  --accent: oklch(0.93 0.06 30);
-  --accent-foreground: oklch(0.3 0.06 30);
+  --accent: oklch(0.95 0.01 250);
+  --accent-foreground: oklch(0.25 0.015 260);
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.99 0.005 80);
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.99 0.005 250);
 
-  --border: oklch(0.88 0.025 50);
-  --input: oklch(0.9 0.02 55);
-  --ring: oklch(0.7 0.18 35);
+  --border: oklch(0.92 0.004 250);
+  --input: oklch(0.92 0.004 250);
+  --ring: oklch(0.52 0.13 255);
 
-  /* Playful chart colors — sunset blaze across the spectrum */
-  --chart-1: oklch(0.7 0.18 35);    /* coral */
-  --chart-2: oklch(0.72 0.16 80);   /* amber */
-  --chart-3: oklch(0.68 0.18 350);  /* pink */
-  --chart-4: oklch(0.62 0.18 290);  /* violet */
-  --chart-5: oklch(0.72 0.14 160);  /* mint */
+  /* Diverse accent spectrum — blue, green, amber, violet, coral */
+  --chart-1: oklch(0.6 0.14 250);   /* blue */
+  --chart-2: oklch(0.66 0.13 155);  /* green */
+  --chart-3: oklch(0.74 0.13 75);   /* amber */
+  --chart-4: oklch(0.58 0.16 295);  /* violet */
+  --chart-5: oklch(0.66 0.17 25);   /* coral */
 
-  --sidebar: oklch(0.97 0.018 60);
-  --sidebar-foreground: oklch(0.26 0.03 30);
-  --sidebar-primary: oklch(0.7 0.18 35);
-  --sidebar-primary-foreground: oklch(0.99 0.005 80);
-  --sidebar-accent: oklch(0.93 0.06 30);
-  --sidebar-accent-foreground: oklch(0.3 0.06 30);
-  --sidebar-border: oklch(0.88 0.025 50);
-  --sidebar-ring: oklch(0.7 0.18 35);
+  --sidebar: oklch(0.985 0.003 250);
+  --sidebar-foreground: oklch(0.22 0.01 260);
+  --sidebar-primary: oklch(0.52 0.13 255);
+  --sidebar-primary-foreground: oklch(0.99 0.005 250);
+  --sidebar-accent: oklch(0.95 0.01 250);
+  --sidebar-accent-foreground: oklch(0.25 0.015 260);
+  --sidebar-border: oklch(0.92 0.004 250);
+  --sidebar-ring: oklch(0.52 0.13 255);
 }
 
 .dark {
-  --background: oklch(0.2 0.02 30);
-  --foreground: oklch(0.96 0.01 60);
-  --card: oklch(0.24 0.025 30);
-  --card-foreground: oklch(0.96 0.01 60);
-  --popover: oklch(0.24 0.025 30);
-  --popover-foreground: oklch(0.96 0.01 60);
-  --primary: oklch(0.72 0.18 35);
-  --primary-foreground: oklch(0.2 0.02 30);
-  --secondary: oklch(0.3 0.03 35);
-  --secondary-foreground: oklch(0.96 0.01 60);
-  --muted: oklch(0.28 0.025 35);
-  --muted-foreground: oklch(0.72 0.03 50);
-  --accent: oklch(0.34 0.05 30);
-  --accent-foreground: oklch(0.96 0.01 60);
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 60);
+  --background: oklch(0.17 0.005 260);
+  --foreground: oklch(0.95 0.005 250);
+  --card: oklch(0.2 0.006 260);
+  --card-foreground: oklch(0.95 0.005 250);
+  --popover: oklch(0.2 0.006 260);
+  --popover-foreground: oklch(0.95 0.005 250);
+  --primary: oklch(0.66 0.13 255);
+  --primary-foreground: oklch(0.17 0.005 260);
+  --secondary: oklch(0.26 0.008 260);
+  --secondary-foreground: oklch(0.95 0.005 250);
+  --muted: oklch(0.24 0.007 260);
+  --muted-foreground: oklch(0.68 0.01 260);
+  --accent: oklch(0.28 0.01 260);
+  --accent-foreground: oklch(0.95 0.005 250);
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 250);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.72 0.18 35);
-  --chart-1: oklch(0.72 0.18 35);
-  --chart-2: oklch(0.74 0.16 80);
-  --chart-3: oklch(0.72 0.18 350);
-  --chart-4: oklch(0.66 0.18 290);
-  --chart-5: oklch(0.74 0.14 160);
-  --sidebar: oklch(0.22 0.022 30);
-  --sidebar-foreground: oklch(0.96 0.01 60);
-  --sidebar-primary: oklch(0.72 0.18 35);
-  --sidebar-primary-foreground: oklch(0.2 0.02 30);
-  --sidebar-accent: oklch(0.34 0.05 30);
-  --sidebar-accent-foreground: oklch(0.96 0.01 60);
+  --ring: oklch(0.66 0.13 255);
+  --chart-1: oklch(0.66 0.14 250);
+  --chart-2: oklch(0.7 0.13 155);
+  --chart-3: oklch(0.78 0.13 75);
+  --chart-4: oklch(0.64 0.16 295);
+  --chart-5: oklch(0.7 0.17 25);
+  --sidebar: oklch(0.19 0.006 260);
+  --sidebar-foreground: oklch(0.95 0.005 250);
+  --sidebar-primary: oklch(0.66 0.13 255);
+  --sidebar-primary-foreground: oklch(0.17 0.005 260);
+  --sidebar-accent: oklch(0.28 0.01 260);
+  --sidebar-accent-foreground: oklch(0.95 0.005 250);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.18 35);
+  --sidebar-ring: oklch(0.66 0.13 255);
 }
 
 @layer base {
@@ -153,24 +151,10 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    background-image:
-      radial-gradient(at 12% 0%, oklch(0.95 0.07 30 / 0.5) 0px, transparent 50%),
-      radial-gradient(at 90% 8%, oklch(0.94 0.07 350 / 0.4) 0px, transparent 45%),
-      radial-gradient(at 75% 95%, oklch(0.94 0.07 80 / 0.35) 0px, transparent 50%);
-    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
   }
-}
-
-/* Playful floating-agent bounce */
-@keyframes ideabox-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-.animate-float {
-  animation: ideabox-float 3s ease-in-out infinite;
 }
