@@ -115,7 +115,7 @@ const STAGES: Array<{
 
 function BoxPage() {
   const [requests, setRequests] = useState<RequestRecord[]>(MOCK_REQUESTS);
-  const [stage, setStage] = useState<Stage>("ideation");
+  const [stage, setStage] = useState<Stage>("shape");
   const [includeParked, setIncludeParked] = useState(false);
   const [pinnedOnly, setPinnedOnly] = useState(false);
   const [hasNotesOnly, setHasNotesOnly] = useState(false);
@@ -278,10 +278,10 @@ function BoxPage() {
 
   const counts = useMemo(
     () => ({
-      staging: 10, // mock pull count — see StagingView
-      ideation: requests.filter((r) => r.status === "new" && !parked[r.id]).length,
-      pushed: requests.filter((r) => r.status === "pushed").length,
-      dismissed: requests.filter((r) => r.status === "dismissed").length,
+      spark: 10, // mock pull count — see StagingView
+      shape: requests.filter((r) => r.status === "new" && !parked[r.id]).length,
+      launch: requests.filter((r) => r.status === "launch").length,
+      shelve: requests.filter((r) => r.status === "shelve").length,
       parked: requests.filter((r) => r.status === "new" && parked[r.id]).length,
     }),
     [requests, parked],
@@ -314,7 +314,7 @@ function BoxPage() {
     }
     if (pinnedOnly) list = list.filter((r) => !!pinned[r.id]);
     if (hasNotesOnly) list = list.filter((r) => !!(notes[r.id] && notes[r.id].trim()));
-    if (activeView && stage !== "staging") {
+    if (activeView && stage !== "spark") {
       list = list.filter((r) =>
         matchesView(activeView, {
           title: r.title,
