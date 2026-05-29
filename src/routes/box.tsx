@@ -675,10 +675,11 @@ function BoxPage() {
               )}
 
               {/* Table */}
-              <div className="flex-1 overflow-auto">
+              <div>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                   <table className="w-full text-sm">
-                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
+                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 sticky top-[57px] z-20 bg-card">
+
                       <tr>
                         <th className="w-8 px-2 py-2.5"></th>
                         <th className="w-8 px-1 py-2.5"></th>
