@@ -63,7 +63,7 @@ export function RunsTable({ runs }: { runs: IngestionRun[] }) {
                 <td className="px-2 py-3 text-right font-mono tabular-nums">{r.itemsScanned}</td>
                 <td className="px-2 py-3 text-right font-mono tabular-nums">{r.signalsExtracted}</td>
                 <td className="px-2 py-3 text-right font-mono tabular-nums text-primary">
-                  {r.pushedToStaging}
+                  {r.pushedToSpark}
                 </td>
                 <td className="px-2 py-3">
                   <span className={`inline-flex items-center gap-1.5 ${meta.cls}`}>

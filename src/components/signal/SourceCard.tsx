@@ -20,7 +20,7 @@ export function SourceCard({
   const scoped = source.scope.filter((s) => s.enabled).length;
   const items24h = source.runs
     .filter((r) => Date.now() - new Date(r.startedAt).getTime() < 24 * 3600_000)
-    .reduce((sum, r) => sum + r.pushedToStaging, 0);
+    .reduce((sum, r) => sum + r.pushedToSpark, 0);
 
   return (
     <div

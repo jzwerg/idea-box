@@ -16,8 +16,8 @@ export type GroupBy =
   | "client"
   | "app"
   | "revenuePotential";
-export type ViewScope = "staging" | "outcome" | "all";
-export type ViewStage = "ideation" | "pushed" | "dismissed";
+export type ViewScope = "spark" | "outcome" | "all";
+export type ViewStage = "shape" | "launch" | "shelve";
 export type ParkReason = "low-confidence" | "snoozed";
 
 export interface ParkInfo {
@@ -31,7 +31,7 @@ export interface SavedView {
   name: string;
   rule: string; // natural-language predicate; matched heuristically
   groupBy: GroupBy;
-  scope?: ViewScope; // defaults to "staging" when missing
+  scope?: ViewScope; // defaults to "spark" when missing
   stage?: ViewStage; // custom views are scoped to one stage; built-ins are shared
   builtin?: boolean;
 }
@@ -65,11 +65,11 @@ interface StagingState {
 }
 
 const BUILTIN_VIEWS: SavedView[] = [
-  { id: "all", name: "All", rule: "", groupBy: "none", scope: "staging", builtin: true },
-  { id: "by-client", name: "By client", rule: "", groupBy: "client", scope: "staging", builtin: true },
-  { id: "by-app", name: "By app", rule: "", groupBy: "app", scope: "staging", builtin: true },
-  { id: "by-revenue", name: "By revenue", rule: "", groupBy: "revenuePotential", scope: "staging", builtin: true },
-  { id: "critical", name: "Critical dissatisfaction", rule: "__critical_dissatisfaction__", groupBy: "none", scope: "staging", builtin: true },
+  { id: "all", name: "All", rule: "", groupBy: "none", scope: "spark", builtin: true },
+  { id: "by-client", name: "By client", rule: "", groupBy: "client", scope: "spark", builtin: true },
+  { id: "by-app", name: "By app", rule: "", groupBy: "app", scope: "spark", builtin: true },
+  { id: "by-revenue", name: "By revenue", rule: "", groupBy: "revenuePotential", scope: "spark", builtin: true },
+  { id: "critical", name: "Critical dissatisfaction", rule: "__critical_dissatisfaction__", groupBy: "none", scope: "spark", builtin: true },
 ];
 
 const STORAGE_KEY = "signal.staging.v3";
@@ -248,7 +248,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
   const addView = useCallback((v: Omit<SavedView, "id">) => {
     setState((s) => {
       const id = `view-${Date.now()}`;
-      return { ...s, views: [...s.views, { scope: "staging", ...v, id }], activeViewId: id };
+      return { ...s, views: [...s.views, { scope: "spark", ...v, id }], activeViewId: id };
     });
   }, []);
 

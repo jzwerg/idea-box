@@ -149,7 +149,7 @@ export function StagingView() {
     const b = batches.find((x) => x.id === id);
     setBatches((bs) => bs.filter((x) => x.id !== id));
     toast.success(
-      `${b?.items.length ?? 0} ideas pushed to Ideation`,
+      `${b?.items.length ?? 0} ideas pushed to Shape`,
       { description: b ? `Grouped into ${b.suggestions.length} clusters` : undefined },
     );
   };
@@ -164,7 +164,7 @@ export function StagingView() {
     return (
       <div className="py-20 text-center text-sm text-muted-foreground">
         <Layers className="h-6 w-6 mx-auto mb-2 opacity-50" strokeWidth={2} />
-        Staging is empty. New pulls will land here for review.
+        Spark is empty. New pulls will land here for review.
       </div>
     );
   }

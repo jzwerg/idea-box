@@ -6,7 +6,7 @@ export type UserType =
   | "Operations Lead"
   | "Client Admin"
   | "Exec Sponsor";
-export type Status = "new" | "reviewed" | "dismissed" | "pushed";
+export type Status = "new" | "reviewed" | "shelve" | "launch";
 export type ProductArea =
   | "Reporting"
   | "KYC"

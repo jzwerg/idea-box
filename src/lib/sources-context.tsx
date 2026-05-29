@@ -66,7 +66,7 @@ export function SourcesProvider({ children }: { children: ReactNode }) {
       durationMs: 0,
       itemsScanned: 0,
       signalsExtracted: 0,
-      pushedToStaging: 0,
+      pushedToSpark: 0,
       status: "running",
       items: [],
     };
@@ -84,7 +84,7 @@ export function SourcesProvider({ children }: { children: ReactNode }) {
                 durationMs: 1800 + Math.floor(Math.random() * 3000),
                 itemsScanned: scanned,
                 signalsExtracted: signals,
-                pushedToStaging: pushed,
+                pushedToSpark: pushed,
                 status: "success",
                 items: [
                   { title: "Ad-hoc run captured fresh feedback", outcome: "signal" },

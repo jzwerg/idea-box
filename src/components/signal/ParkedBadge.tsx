@@ -41,7 +41,7 @@ export function ParkedBadge({ info, onUnpark }: { info: ParkInfo; onUnpark?: () 
                 }}
                 className="inline-flex items-center gap-1 text-primary hover:underline mt-1"
               >
-                <ArchiveRestore className="h-3 w-3" /> Move back to staging
+                <ArchiveRestore className="h-3 w-3" /> Move back to Spark
               </button>
             )}
           </div>

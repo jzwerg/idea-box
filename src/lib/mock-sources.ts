@@ -29,7 +29,7 @@ export interface IngestionRun {
   durationMs: number;
   itemsScanned: number;
   signalsExtracted: number;
-  pushedToStaging: number;
+  pushedToSpark: number;
   status: RunStatus;
   notes?: string;
   items: RunItem[];
@@ -84,7 +84,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 4200,
         itemsScanned: 142,
         signalsExtracted: 6,
-        pushedToStaging: 4,
+        pushedToSpark: 4,
         status: "success",
         items: [
           { title: "Need bulk export for SAR list", outcome: "signal" },
@@ -98,7 +98,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 3800,
         itemsScanned: 98,
         signalsExtracted: 3,
-        pushedToStaging: 3,
+        pushedToSpark: 3,
         status: "success",
         items: [
           { title: "Risk score drilldown by entity", outcome: "signal" },
@@ -110,7 +110,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 5100,
         itemsScanned: 211,
         signalsExtracted: 9,
-        pushedToStaging: 7,
+        pushedToSpark: 7,
         status: "partial",
         notes: "2 filtered (confidence < 0.4)",
         items: [
@@ -123,7 +123,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 0,
         itemsScanned: 0,
         signalsExtracted: 0,
-        pushedToStaging: 0,
+        pushedToSpark: 0,
         status: "failed",
         notes: "Auth token expired — refreshed automatically",
         items: [],
@@ -155,7 +155,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 2100,
         itemsScanned: 28,
         signalsExtracted: 4,
-        pushedToStaging: 3,
+        pushedToSpark: 3,
         status: "success",
         items: [
           { title: "Quarterly attestation needs e-sign", outcome: "signal" },
@@ -167,7 +167,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 1900,
         itemsScanned: 19,
         signalsExtracted: 2,
-        pushedToStaging: 2,
+        pushedToSpark: 2,
         status: "success",
         items: [],
       },
@@ -176,7 +176,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 3300,
         itemsScanned: 47,
         signalsExtracted: 5,
-        pushedToStaging: 4,
+        pushedToSpark: 4,
         status: "partial",
         notes: "1 duplicate merged",
         items: [],
@@ -208,7 +208,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 6800,
         itemsScanned: 9,
         signalsExtracted: 5,
-        pushedToStaging: 5,
+        pushedToSpark: 5,
         status: "success",
         items: [
           { title: "QBR — Nordea: wants regional reporting view", outcome: "signal" },
@@ -220,7 +220,7 @@ export const MOCK_SOURCES: SourceConfig[] = [
         durationMs: 5400,
         itemsScanned: 6,
         signalsExtracted: 3,
-        pushedToStaging: 2,
+        pushedToSpark: 2,
         status: "success",
         items: [],
       },

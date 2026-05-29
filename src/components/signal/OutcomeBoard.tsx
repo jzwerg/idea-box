@@ -18,9 +18,9 @@ const LANES: Array<{
   icon: typeof CheckCircle2;
   tone: string;
 }> = [
-  { key: "new", title: "Staging", icon: ArrowLeftCircle, tone: "border-primary/40 bg-primary/[0.03]" },
-  { key: "pushed", title: "Pushed", icon: CheckCircle2, tone: "border-chart-2/40 bg-chart-2/[0.04]" },
-  { key: "dismissed", title: "Dismissed", icon: XCircle, tone: "border-muted-foreground/30 bg-muted/30" },
+  { key: "new", title: "Shape", icon: ArrowLeftCircle, tone: "border-primary/40 bg-primary/[0.03]" },
+  { key: "launch", title: "Launch", icon: CheckCircle2, tone: "border-chart-2/40 bg-chart-2/[0.04]" },
+  { key: "shelve", title: "Shelve", icon: XCircle, tone: "border-muted-foreground/30 bg-muted/30" },
 ];
 
 interface Props {
@@ -36,8 +36,8 @@ export function OutcomeBoard({ requests, onMove, onOpen }: Props) {
     const map: Record<Status, RequestRecord[]> = {
       new: [],
       reviewed: [],
-      pushed: [],
-      dismissed: [],
+      launch: [],
+      shelve: [],
     };
     requests.forEach((r) => map[r.status]?.push(r));
     return map;
