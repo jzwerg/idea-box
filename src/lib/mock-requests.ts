@@ -37,6 +37,8 @@ export interface PriorityBreakdown {
   effort: ScoreDimension; // inverted: higher value = less effort
 }
 
+export type RevenuePotential = "low" | "medium" | "high" | "critical";
+
 export interface RequestRecord {
   id: string;
   title: string;
@@ -52,6 +54,46 @@ export interface RequestRecord {
   createdAt: string;
   jiraKey?: string;
 }
+
+// ---- Derived categorical fields (mock-only; computed from existing data) ----
+
+const APP_BY_AREA: Record<ProductArea, string> = {
+  Reporting: "Atlas",
+  KYC: "Beacon",
+  "Transaction Monitoring": "Compass",
+  "Risk Engine": "Compass",
+  "Client Portal": "Atlas",
+  "Admin Console": "Beacon",
+};
+
+export function getClient(r: RequestRecord): string {
+  return r.mentions[0]?.client ?? "Unknown";
+}
+
+export function getApp(r: RequestRecord): string {
+  return APP_BY_AREA[r.productArea];
+}
+
+export function getRevenuePotential(r: RequestRecord): RevenuePotential {
+  const s =
+    r.priority.impact.value * 0.6 + r.priority.urgency.value * 0.4;
+  if (s >= 78) return "critical";
+  if (s >= 60) return "high";
+  if (s >= 40) return "medium";
+  return "low";
+}
+
+export function isCriticalDissatisfaction(r: RequestRecord): boolean {
+  return r.priority.urgency.value >= 70 && r.priority.impact.value >= 70;
+}
+
+export const REVENUE_ORDER: Record<RevenuePotential, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
 
 export const WEIGHTS = {
   impact: 0.35,
