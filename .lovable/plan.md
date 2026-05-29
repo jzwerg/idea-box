@@ -1,116 +1,63 @@
+## Visual + Interaction Overhaul
 
-## Mental model
+### 1. Strip the gradient / pink-orange feel → Notion-styled neutral palette with multi-hue accents
 
-One request table. Every request has a **stage** and optional **parked** flag. Routes are stages; Views are cross-stage filters; Agent is a layer that wraps everything.
+**`src/styles.css`**
+- Replace warm pastel surfaces with Notion-style neutrals: near-white background (`oklch(0.99 0.002 250)`), warm-neutral foreground (`oklch(0.22 0.01 250)`), subtle borders (`oklch(0.92 0.004 250)`).
+- Remove the body `background-image` radial gradients entirely — flat surface, no sunset wash.
+- Diversify the accent palette so it isn't mono-coral:
+  - `--primary`: muted indigo/blue `oklch(0.55 0.13 250)` (Notion-ish blue, used for primary actions)
+  - `--chart-1` blue, `--chart-2` green, `--chart-3` amber, `--chart-4` violet, `--chart-5` coral — used as category/stage tints only, never as page gradients.
+- Dark mode mirrors the same neutrals (Notion dark gray, not warm brown).
+- Keep Sora/Manrope.
 
-```text
-Sources  →  Staging  →  Outcome
-                        ├─ Pushed
-                        └─ Dismissed
+**Component sweep** (find/replace `bg-gradient-to-*`, `from-primary`, `via-chart-*`, `to-chart-*`):
+- `SignalShell.tsx` — logo mark becomes flat `bg-primary` rounded square; "IdeaBox" wordmark loses the `bg-clip-text` gradient (solid foreground).
+- `FloatingAgent.tsx` — gradient pill removed (replaced in step 2).
+- `box.tsx`, `AgentStrip.tsx`, `OutcomeBoard.tsx`, any other gradient usage — flatten to solid tokens.
 
-                        Parked  (side bin, reachable from Staging — not a top route)
-                        Agent   (top strip on every page + /agent for tuning)
-                        Views   (cross-stage saved filters in a left rail)
-```
+### 2. Rename "Ask Agent" → "Brainstorm" + replace floating pill with a centered command-modal
 
-### Stage rules (single source of truth)
+**`src/components/signal/FloatingAgent.tsx` → rebuild**
+- Trigger: a small, quiet circular icon button bottom-right (Sparkles icon, neutral surface, subtle ring). No bouncing float animation, no gradient blur halo, no oversized pill. Tooltip shows label "Brainstorm" + kbd `B`.
+- Clicking trigger or pressing `B` opens a **centered modal** (Radix Dialog), not a side sheet:
+  - `max-w-2xl`, vertically centered, soft shadow, fade + subtle scale-in (150ms) — no springy bounce.
+  - Header: "Brainstorm" + small kbd hint (`B` to toggle, `Esc` to close).
+  - Body: reuse the existing `BrainstormSheet` content (prompt input + results list + open-request handoff), repackaged inside `DialogContent`.
+- Keyboard:
+  - `B` (no modifier, not inside input/textarea/contentEditable) toggles open/closed.
+  - `Esc` closes if the modal is "clean" (empty input, no in-flight brainstorm).
+  - `Esc` when "dirty" (user has typed a prompt or a brainstorm result is on screen) opens an AlertDialog: "Discard brainstorm? Your draft will be lost." with Cancel / Discard. Confirm closes; Cancel keeps modal open.
+  - Same dirty-check guards backdrop click and the trigger-button-toggle close path, so one-stroke open/close only happens when there's nothing to lose.
+- Remove `animate-float` keyframes from `styles.css` (no longer used).
 
-`status: "new" | "pushed" | "dismissed"` + `parked: { reason: "low-confidence" | "snoozed", until?: string } | null`.
+**`src/components/signal/BrainstormSheet.tsx`**
+- Extract its inner content into a `BrainstormPanel` component (or accept a `variant: "modal" | "sheet"` prop) so the new modal can render the same UI without the Sheet chrome. Keep the existing sheet export intact only if other callers use it; otherwise migrate fully to the modal.
 
-- **Staging** = `status==="new" && !parked`. The triage surface.
-- **Parked** = `!!parked`. Accessible from a tab inside Staging ("Parked · N"), not a top nav item. The agent auto-parks `confidence < 0.4` items on ingest so they don't crowd Staging.
-- **Outcome** = `status==="pushed" || "dismissed"`. One route, two presentations (tabs + Kanban) — see below.
+### 3. "Show Parked" toggle — promote to the views row, right-aligned
 
-## Navigation
+**`src/routes/box.tsx`**
+- Find the Ideation stage toolbar. Currently "Show Parked" sits below/near the stage header at a different visual level than the views chips.
+- Restructure the toolbar into a single flex row:
+  - Left: views chips (Pinned / Has notes / Smart groups / etc. from `ViewsBar`).
+  - Right (`ml-auto`): the "Show Parked" toggle, styled as a sibling chip/switch matching the views' visual weight (same height, same radius, same muted treatment when off, accent when on).
+- Only renders on the Ideation tab (existing behavior preserved); same component, just relocated and restyled.
 
-Top nav becomes: **Sources · Staging · Outcome · Agent**. (Today's `/` becomes `/staging`; `/` redirects to `/staging`.)
+---
 
-```text
-/sources                Source cards + ingestion runs (today's /ingestion)
-/staging                The triage table. Tabs: All · Parked
-/outcome                Pushed + Dismissed. Sub-tabs: List view | Board view
-/agent                  Tuning, rules, trust log (today's /agent)
-```
+### Technical details
 
-The Quarantine concept is dropped. Low-confidence items go to **Parked** with a visible "Agent unsure — review" reason, so there's no no-man's-land.
+- All color changes flow through `src/styles.css` tokens — no hex values in components.
+- Modal uses existing `@/components/ui/dialog` and `@/components/ui/alert-dialog`; no new deps.
+- Keyboard handler stays in `FloatingAgent`, but reads a `isDirty` flag derived from brainstorm panel state (lift state up or expose via a small context/ref).
+- `animate-float` keyframe + `.animate-float` class removed from `styles.css`.
+- No route changes, no data-model changes, no business logic changes.
 
-## Outcome surface
+### Files touched
 
-One route, two layouts toggled by a small segmented control:
-
-- **List view** (default) — three sub-tabs `Pushed (N) · Dismissed (N) · All`. Same row component as Staging, no checkboxes/drag.
-- **Board view** — three lanes side-by-side: `Pushed · Dismissed · ← back to Staging` (drag a card back into staging to reopen). Useful for visual grooming of recent decisions.
-
-Both views read from the same filtered list; the toggle is pure presentation.
-
-## Views (cross-stage)
-
-A persistent **left rail** on Staging and Outcome (collapsed by default on Outcome). Views become saved filter+stage scopes:
-
-```text
-SavedView {
-  name, rule (NL),
-  scope: ("staging" | "outcome" | "all"),
-  groupBy
-}
-```
-
-- Built-ins: `All staging`, `Pinned`, `Has notes`, `Parked`, `Recently pushed`.
-- A view like `"enterprise SSO"` with `scope: "all"` shows matches across Staging + Pushed + Dismissed, with a small stage chip per row.
-- Smart Groups and Brainstorm results can both be **saved as a View** (already partly wired). Brainstorm becomes "new View from idea".
-- The rail replaces today's pill bar; the pill bar moves into the rail as the active list. Frees horizontal space and makes Views feel first-class rather than chrome.
-
-## Agent layer
-
-Stays as today's pattern but unified:
-
-- A single **persistent top strip** (rescoring status, last run, trust meter delta) rendered by `SignalShell` on every route — not just Staging. Removes the duplicated agent banner currently inside `index.tsx`.
-- `/agent` keeps deep tuning + proposed rules + trust history.
-- Every teaching action (pin/dismiss/push/tag/note/reorder) still routes through `recordAction` → `proposeRule` — no behavior change, just consolidated UI.
-
-## Data model changes
-
-In `mock-requests.ts` (and `RequestRecord`):
-
-- Add `parked?: { reason: "low-confidence" | "snoozed"; until?: string; note?: string }`.
-- Drop the unused `"reviewed"` status.
-- Seed ~5 mock requests with `parked` so the bin isn't empty.
-
-In `staging-context.tsx`:
-
-- Add `parkRequest(id, reason)` / `unpark(id)` actions.
-- Extend `SavedView` with `scope`.
-- Extend `matchesView` to honor scope and accept a request's stage.
-
-## File-level changes
-
-**New**
-- `src/routes/staging.tsx` — extracted from current `index.tsx`. Adds `All | Parked` sub-tabs.
-- `src/routes/outcome.tsx` — list/board toggle, sub-tabs, reuses `StagingRow` in read-only mode.
-- `src/components/signal/OutcomeBoard.tsx` — three-lane Kanban (dnd-kit, reuse existing sensors).
-- `src/components/signal/ViewsRail.tsx` — left rail, replaces `ViewsBar` placement.
-- `src/components/signal/AgentStrip.tsx` — the persistent top strip, mounted by `SignalShell`.
-- `src/components/signal/ParkedBadge.tsx` — tiny chip + reason tooltip.
-
-**Edited**
-- `src/routes/index.tsx` → becomes a redirect to `/staging` (keep file tiny).
-- `src/routes/__root.tsx` → no structural change; nav labels updated.
-- `src/components/signal/SignalShell.tsx` → mount `AgentStrip`, update nav to `Sources · Staging · Outcome · Agent`.
-- `src/lib/mock-requests.ts` → add `parked` field, drop `reviewed`, seed parked items.
-- `src/lib/staging-context.tsx` → `parkRequest`/`unpark`, `SavedView.scope`, updated `matchesView`.
-- `src/components/signal/ViewsBar.tsx` → either delete or repurpose as the rail's inner list.
-- `src/routes/ingestion.index.tsx` → rename route to `/sources` (or keep file, change label) — pick one in build.
-
-**Deleted (or merged)**
-- The duplicated agent banner block in `index.tsx` (moves into `AgentStrip`).
-
-## Out of scope (call out, don't build)
-
-- Real auto-parking heuristic beyond `confidence < 0.4`.
-- Snooze-until scheduler (UI only; no timer that re-surfaces).
-- Server persistence — all state stays in localStorage as today.
-- Renaming `ingestion` route on disk if it risks breaking the generated route tree; we'll just relabel in nav if needed.
-
-## Open question to confirm during build
-
-Brainstorm currently lives behind the `B` shortcut + a button. After this refactor, should it stay as a sheet, or fold entirely into "New View from idea" inside the Views rail? Leaning the latter — one less surface — but happy to keep both.
+- `src/styles.css` (palette + remove gradient bg + remove float keyframe)
+- `src/components/signal/FloatingAgent.tsx` (rewrite as modal trigger + dirty-aware Esc)
+- `src/components/signal/BrainstormSheet.tsx` (extract reusable panel)
+- `src/components/signal/SignalShell.tsx` (de-gradient logo/wordmark)
+- `src/routes/box.tsx` (move "Show Parked" into views row, right-aligned)
+- Light sweep of other components for stray `bg-gradient-*` / `bg-clip-text` usage tied to the old palette.

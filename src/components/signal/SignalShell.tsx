@@ -24,11 +24,11 @@ export function SignalShell({
         <div className="px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/box" className="flex items-center gap-2 group">
-              <div className="relative h-8 w-8 rounded-xl bg-gradient-to-br from-primary to-chart-3 flex items-center justify-center shadow-sm transition-transform group-hover:rotate-6 group-hover:scale-105">
-                <Package className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
+              <div className="h-7 w-7 rounded-md bg-foreground flex items-center justify-center transition-transform group-hover:scale-105">
+                <Package className="h-3.5 w-3.5 text-background" strokeWidth={2.5} />
               </div>
               <div className="flex items-baseline gap-1.5">
-                <h1 className="font-display font-bold tracking-tight text-xl bg-gradient-to-r from-primary to-chart-3 bg-clip-text text-transparent">
+                <h1 className="font-display font-semibold tracking-tight text-lg text-foreground">
                   IdeaBox
                 </h1>
                 <span className="text-[10px] text-muted-foreground font-mono">v0.3</span>

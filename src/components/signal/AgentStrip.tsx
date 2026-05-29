@@ -60,7 +60,7 @@ export function AgentStrip() {
         <span className="font-mono font-semibold text-foreground tabular-nums">{pct}%</span>
         <div className="h-1.5 w-24 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-primary/60 to-primary transition-all"
+            className="h-full bg-primary transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>

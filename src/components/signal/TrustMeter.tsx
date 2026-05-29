@@ -37,7 +37,7 @@ export function TrustMeter() {
       </div>
       <div className="flex-1 max-w-xs h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-primary/60 to-primary transition-all"
+          className="h-full bg-primary transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>

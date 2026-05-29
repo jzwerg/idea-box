@@ -96,24 +96,24 @@ const STAGES: Array<{
     label: "Ideation",
     emoji: "💡",
     status: "new",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-    activeTone: "bg-gradient-to-br from-primary/15 to-chart-3/10 text-foreground shadow-sm border border-primary/30",
+    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
+    activeTone: "bg-card text-foreground border border-border shadow-sm",
   },
   {
     key: "pushed",
     label: "Pushed",
     emoji: "🚀",
     status: "pushed",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-    activeTone: "bg-gradient-to-br from-chart-5/20 to-chart-2/10 text-foreground shadow-sm border border-chart-5/40",
+    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
+    activeTone: "bg-card text-foreground border border-border shadow-sm",
   },
   {
     key: "dismissed",
     label: "Dismissed",
     emoji: "🗑️",
     status: "dismissed",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-    activeTone: "bg-muted text-foreground shadow-sm border border-border",
+    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
+    activeTone: "bg-card text-foreground border border-border shadow-sm",
   },
 ];
 
@@ -418,22 +418,6 @@ function BoxPage() {
               </button>
             );
           })}
-
-          {isIdeation && counts.parked > 0 && (
-            <button
-              onClick={() => setIncludeParked((v) => !v)}
-              className={`ml-2 px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 transition-colors border ${
-                includeParked
-                  ? "bg-chart-4/15 text-foreground border-chart-4/40"
-                  : "bg-card/40 text-muted-foreground border-border hover:text-foreground"
-              }`}
-              title="Include parked items"
-            >
-              <MoonStar className="h-3 w-3" />
-              {includeParked ? "Hiding none" : "Show parked"}
-              <span className="font-mono">{counts.parked}</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -441,14 +425,31 @@ function BoxPage() {
       {isIdeation && (
         <div className="px-6 py-2.5 flex items-center gap-3 flex-wrap border-y border-border/60 bg-card/30">
           <ViewsBar />
-          {hasManualOrdering && (
-            <button
-              onClick={clearManualOrdering}
-              className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="h-3 w-3" /> Reset to agent order
-            </button>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {hasManualOrdering && (
+              <button
+                onClick={clearManualOrdering}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="h-3 w-3" /> Reset to agent order
+              </button>
+            )}
+            {counts.parked > 0 && (
+              <button
+                onClick={() => setIncludeParked((v) => !v)}
+                className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 transition-colors border ${
+                  includeParked
+                    ? "bg-accent text-foreground border-border"
+                    : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:bg-accent/50"
+                }`}
+                title="Include parked items"
+              >
+                <MoonStar className="h-3 w-3" />
+                {includeParked ? "Hide parked" : "Show parked"}
+                <span className="font-mono tabular-nums">{counts.parked}</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
