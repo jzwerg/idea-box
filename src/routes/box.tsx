@@ -298,6 +298,13 @@ function BoxPage() {
     });
     if (areaFilter !== "all") list = list.filter((r) => r.productArea === areaFilter);
     if (userTypeFilter !== "all") list = list.filter((r) => r.userType === userTypeFilter);
+    if (flagFilter !== "all") {
+      list = list.filter((r) =>
+        flagFilter === "dissatisfaction"
+          ? isCriticalDissatisfaction(r)
+          : getRevenuePotential(r) === flagFilter,
+      );
+    }
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
