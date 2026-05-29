@@ -2,8 +2,14 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GripVertical, Pin, PinOff } from "lucide-react";
-import type { RequestRecord, UserType } from "@/lib/mock-requests";
+import { GripVertical, Pin, PinOff, Flag } from "lucide-react";
+import {
+  getRevenuePotential,
+  isCriticalDissatisfaction,
+  type RequestRecord,
+  type RevenuePotential,
+  type UserType,
+} from "@/lib/mock-requests";
 import { useStaging } from "@/lib/staging-context";
 import { useAgent, compositeWith } from "@/lib/agent-context";
 import { SourceBadge } from "./SourceBadge";
@@ -18,6 +24,14 @@ const USER_TYPE_TONE: Record<UserType, string> = {
   "Operations Lead": "border-chart-3/40 text-chart-3",
   "Client Admin": "border-chart-5/40 text-chart-5",
   "Exec Sponsor": "border-primary/40 text-primary",
+};
+
+// Revenue-potential color flag — diverse hue spectrum
+const REVENUE_FLAG: Record<RevenuePotential, { stripe: string; dot: string; label: string }> = {
+  critical: { stripe: "oklch(0.66 0.17 25)", dot: "bg-[oklch(0.66_0.17_25)]", label: "Critical revenue" },
+  high:     { stripe: "oklch(0.74 0.13 75)", dot: "bg-[oklch(0.74_0.13_75)]", label: "High revenue" },
+  medium:   { stripe: "oklch(0.6 0.14 250)", dot: "bg-[oklch(0.6_0.14_250)]", label: "Medium revenue" },
+  low:      { stripe: "oklch(0.85 0.01 250)", dot: "bg-[oklch(0.85_0.01_250)]", label: "Low revenue" },
 };
 
 interface Props {
