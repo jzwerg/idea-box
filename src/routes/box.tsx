@@ -21,6 +21,7 @@ import {
   MoonStar,
   ArchiveRestore,
   Lightbulb,
+  Flag,
   Rocket,
   Pin,
   StickyNote,
