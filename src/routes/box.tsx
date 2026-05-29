@@ -616,7 +616,7 @@ function BoxPage() {
                     )}
                     {!isShape && (
                       <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkReopen}>
-                        <RotateCcw className="h-3.5 w-3.5" /> Move to Ideation
+                        <RotateCcw className="h-3.5 w-3.5" /> Move to Shape
                       </Button>
                     )}
                   </div>
