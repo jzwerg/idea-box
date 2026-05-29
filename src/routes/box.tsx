@@ -21,6 +21,7 @@ import {
   MoonStar,
   ArchiveRestore,
   Lightbulb,
+  Flag,
   Rocket,
   Pin,
   StickyNote,
@@ -126,6 +127,9 @@ function BoxPage() {
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
   const [userTypeFilter, setUserTypeFilter] = useState<UserType | "all">("all");
+  const [flagFilter, setFlagFilter] = useState<
+    "all" | "critical" | "high" | "medium" | "low" | "dissatisfaction"
+  >("all");
 
   const { weights, registerApply, proposeRule } = useAgent();
   const {
@@ -295,6 +299,13 @@ function BoxPage() {
     });
     if (areaFilter !== "all") list = list.filter((r) => r.productArea === areaFilter);
     if (userTypeFilter !== "all") list = list.filter((r) => r.userType === userTypeFilter);
+    if (flagFilter !== "all") {
+      list = list.filter((r) =>
+        flagFilter === "dissatisfaction"
+          ? isCriticalDissatisfaction(r)
+          : getRevenuePotential(r) === flagFilter,
+      );
+    }
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -350,6 +361,7 @@ function BoxPage() {
     isIdeation,
     pinnedOnly,
     hasNotesOnly,
+    flagFilter,
   ]);
 
   const groupKeyOf = (r: RequestRecord, gb: GroupBy): string => {
@@ -529,6 +541,45 @@ function BoxPage() {
                     {USER_TYPES.map((u) => (
                       <SelectItem key={u} value={u}>{u}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <Select value={flagFilter} onValueChange={(v) => setFlagFilter(v as typeof flagFilter)}>
+                  <SelectTrigger className="h-9 w-48 text-sm rounded-full bg-card">
+                    <Flag className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All flags</SelectItem>
+                    <SelectItem value="critical">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.66_0.17_25)]" />
+                        Critical revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="high">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.74_0.13_75)]" />
+                        High revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.6_0.14_250)]" />
+                        Medium revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="low">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.85_0.01_250)]" />
+                        Low revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="dissatisfaction">
+                      <span className="inline-flex items-center gap-2 text-destructive">
+                        <Flag className="h-3 w-3" strokeWidth={2.5} />
+                        Critical dissatisfaction
+                      </span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

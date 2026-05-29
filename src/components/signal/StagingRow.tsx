@@ -2,8 +2,14 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GripVertical, Pin, PinOff } from "lucide-react";
-import type { RequestRecord, UserType } from "@/lib/mock-requests";
+import { GripVertical, Pin, PinOff, Flag } from "lucide-react";
+import {
+  getRevenuePotential,
+  isCriticalDissatisfaction,
+  type RequestRecord,
+  type RevenuePotential,
+  type UserType,
+} from "@/lib/mock-requests";
 import { useStaging } from "@/lib/staging-context";
 import { useAgent, compositeWith } from "@/lib/agent-context";
 import { SourceBadge } from "./SourceBadge";
@@ -18,6 +24,14 @@ const USER_TYPE_TONE: Record<UserType, string> = {
   "Operations Lead": "border-chart-3/40 text-chart-3",
   "Client Admin": "border-chart-5/40 text-chart-5",
   "Exec Sponsor": "border-primary/40 text-primary",
+};
+
+// Revenue-potential color flag — diverse hue spectrum
+const REVENUE_FLAG: Record<RevenuePotential, { stripe: string; dot: string; label: string }> = {
+  critical: { stripe: "oklch(0.66 0.17 25)", dot: "bg-[oklch(0.66_0.17_25)]", label: "Critical revenue" },
+  high:     { stripe: "oklch(0.74 0.13 75)", dot: "bg-[oklch(0.74_0.13_75)]", label: "High revenue" },
+  medium:   { stripe: "oklch(0.6 0.14 250)", dot: "bg-[oklch(0.6_0.14_250)]", label: "Medium revenue" },
+  low:      { stripe: "oklch(0.85 0.01 250)", dot: "bg-[oklch(0.85_0.01_250)]", label: "Low revenue" },
 };
 
 interface Props {
@@ -48,15 +62,20 @@ export function StagingRow({
   const sortable = useSortable({ id: r.id, disabled: !draggable });
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-  };
 
   const score = compositeWith(r.priority, weights);
   const uniqueSources = Array.from(new Set(r.mentions.map((m) => m.source)));
   const isPinned = !!pinned[r.id];
+  const revenue = getRevenuePotential(r);
+  const flag = REVENUE_FLAG[revenue];
+  const critical = isCriticalDissatisfaction(r);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    boxShadow: `inset 3px 0 0 ${flag.stripe}`,
+  };
 
   const handlePin = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,7 +126,21 @@ export function StagingRow({
       <td className="px-2 py-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`inline-block h-2 w-2 rounded-full shrink-0 ${flag.dot}`}
+              title={flag.label}
+              aria-label={flag.label}
+            />
             <span className="font-medium">{r.title}</span>
+            {critical && (
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/30"
+                title="Critical client dissatisfaction"
+              >
+                <Flag className="h-2.5 w-2.5" strokeWidth={2.5} />
+                Critical
+              </span>
+            )}
             <Badge
               variant="outline"
               className={`font-normal text-[10px] py-0 h-4 ${USER_TYPE_TONE[r.userType]}`}
