@@ -520,8 +520,10 @@ function BoxPage() {
 
 
       {/* The Box — bordered surface that holds all stage content */}
-      <div className="px-6 pb-6 flex-1 min-h-0">
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
+      {/* The Box — bordered surface that holds all stage content */}
+      <div className="px-6 pb-6">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+
           {isSpark ? (
             <StagingView />
           ) : (
