@@ -315,6 +315,8 @@ function BoxPage() {
         (r) => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q),
       );
     }
+    if (pinnedOnly) list = list.filter((r) => !!pinned[r.id]);
+    if (hasNotesOnly) list = list.filter((r) => !!(notes[r.id] && notes[r.id].trim()));
     if (activeView && isIdeation) {
       list = list.filter((r) =>
         matchesView(activeView, {
@@ -325,6 +327,7 @@ function BoxPage() {
           productArea: r.productArea,
           pinned: !!pinned[r.id],
           hasNote: !!(notes[r.id] && notes[r.id].trim()),
+          criticalDissatisfaction: isCriticalDissatisfaction(r),
         }),
       );
     }
@@ -359,7 +362,41 @@ function BoxPage() {
     notes,
     parked,
     isIdeation,
+    pinnedOnly,
+    hasNotesOnly,
   ]);
+
+  const groupKeyOf = (r: RequestRecord, gb: GroupBy): string => {
+    switch (gb) {
+      case "client": return getClient(r);
+      case "app": return getApp(r);
+      case "revenuePotential": return getRevenuePotential(r);
+      case "userType": return r.userType;
+      case "productArea": return r.productArea;
+      case "tag": return (tags[r.id] ?? [])[0] ?? "—";
+      default: return "";
+    }
+  };
+
+  const grouped = useMemo(() => {
+    if (!activeView || activeView.groupBy === "none" || !isIdeation) return null;
+    const gb = activeView.groupBy;
+    const map = new Map<string, RequestRecord[]>();
+    for (const r of visible) {
+      const k = groupKeyOf(r, gb);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(r);
+    }
+    let keys = Array.from(map.keys());
+    if (gb === "revenuePotential") {
+      keys.sort((a, b) => (REVENUE_ORDER[a as keyof typeof REVENUE_ORDER] ?? 99) - (REVENUE_ORDER[b as keyof typeof REVENUE_ORDER] ?? 99));
+    } else {
+      keys.sort();
+    }
+    return keys.map((k) => ({ key: k, items: map.get(k)! }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, activeView, isIdeation, tags]);
+
 
   const allVisibleChecked = visible.length > 0 && visible.every((r) => selectedIds.has(r.id));
 
@@ -418,7 +455,7 @@ function BoxPage() {
                   active ? s.activeTone : `bg-card/40 ${s.tone} border border-transparent`
                 }`}
               >
-                <span className="text-base leading-none">{s.emoji}</span>
+                <s.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
                 <span className="font-display">{s.label}</span>
                 <span
                   className={`font-mono tabular-nums text-xs rounded-full px-1.5 py-0.5 ${
