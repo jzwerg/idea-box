@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStaging, type GroupBy } from "@/lib/staging-context";
+import { useStaging, type GroupBy, type ViewStage } from "@/lib/staging-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,14 +20,24 @@ import {
 } from "@/components/ui/select";
 import { Plus, X, LayoutGrid, Layers } from "lucide-react";
 
-export function ViewsBar() {
+interface Props {
+  currentStage: ViewStage;
+}
+
+export function ViewsBar({ currentStage }: Props) {
   const { views, activeViewId, setActiveView, removeView, addView } = useStaging();
   const [open, setOpen] = useState(false);
+
+  // Built-ins are shared across stages; custom views only show in the stage
+  // they were created in.
+  const visibleViews = views.filter(
+    (v) => v.builtin || !v.stage || v.stage === currentStage,
+  );
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground mr-1" strokeWidth={2.25} />
-      {views.map((v) => {
+      {visibleViews.map((v) => {
         const active = v.id === activeViewId;
         const isGrouping = !!v.builtin && v.groupBy !== "none";
         return (
@@ -69,8 +79,9 @@ export function ViewsBar() {
           </button>
         </DialogTrigger>
         <NewViewDialog
+          currentStage={currentStage}
           onSave={(v) => {
-            addView(v);
+            addView({ ...v, stage: currentStage });
             setOpen(false);
           }}
         />
@@ -80,8 +91,10 @@ export function ViewsBar() {
 }
 
 function NewViewDialog({
+  currentStage,
   onSave,
 }: {
+  currentStage: ViewStage;
   onSave: (v: { name: string; rule: string; groupBy: GroupBy }) => void;
 }) {
   const [name, setName] = useState("");
@@ -90,9 +103,12 @@ function NewViewDialog({
   return (
     <DialogContent className="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle>New view</DialogTitle>
+        <DialogTitle>New view in {currentStage}</DialogTitle>
       </DialogHeader>
       <div className="space-y-3">
+        <p className="text-[11px] text-muted-foreground -mt-2">
+          This custom view will only appear in the <span className="font-medium text-foreground">{currentStage}</span> stage.
+        </p>
         <div>
           <label className="text-xs text-muted-foreground">Name</label>
           <Input

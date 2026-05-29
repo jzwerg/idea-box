@@ -314,7 +314,7 @@ function BoxPage() {
     }
     if (pinnedOnly) list = list.filter((r) => !!pinned[r.id]);
     if (hasNotesOnly) list = list.filter((r) => !!(notes[r.id] && notes[r.id].trim()));
-    if (activeView && isIdeation) {
+    if (activeView && stage !== "staging") {
       list = list.filter((r) =>
         matchesView(activeView, {
           title: r.title,
@@ -478,9 +478,9 @@ function BoxPage() {
           ) : (
             <>
               {/* Views — sub-filters within a stage */}
-              {isIdeation && (
-                <div className="px-5 py-2.5 flex items-center gap-3 flex-wrap border-b border-border/60 bg-chip/60">
-                  <ViewsBar />
+              <div className="px-5 py-2.5 flex items-center gap-3 flex-wrap border-b border-border/60 bg-chip/60">
+                <ViewsBar currentStage={stage as "ideation" | "pushed" | "dismissed"} />
+                {isIdeation && (
                   <div className="ml-auto flex items-center gap-2">
                     {hasManualOrdering && (
                       <button
@@ -506,8 +506,8 @@ function BoxPage() {
                       </button>
                     )}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Filter bar */}
               <div className="border-b border-border/60 bg-chip/40 px-5 py-2.5 flex items-center gap-3 flex-wrap">

@@ -17,6 +17,7 @@ export type GroupBy =
   | "app"
   | "revenuePotential";
 export type ViewScope = "staging" | "outcome" | "all";
+export type ViewStage = "ideation" | "pushed" | "dismissed";
 export type ParkReason = "low-confidence" | "snoozed";
 
 export interface ParkInfo {
@@ -31,6 +32,7 @@ export interface SavedView {
   rule: string; // natural-language predicate; matched heuristically
   groupBy: GroupBy;
   scope?: ViewScope; // defaults to "staging" when missing
+  stage?: ViewStage; // custom views are scoped to one stage; built-ins are shared
   builtin?: boolean;
 }
 
