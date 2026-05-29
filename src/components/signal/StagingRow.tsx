@@ -71,6 +71,16 @@ export function StagingRow({
   const score = compositeWith(r.priority, weights);
   const uniqueSources = Array.from(new Set(r.mentions.map((m) => m.source)));
   const isPinned = !!pinned[r.id];
+  const revenue = getRevenuePotential(r);
+  const flag = REVENUE_FLAG[revenue];
+  const critical = isCriticalDissatisfaction(r);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    boxShadow: `inset 3px 0 0 ${flag.stripe}`,
+  };
 
   const handlePin = (e: React.MouseEvent) => {
     e.stopPropagation();
