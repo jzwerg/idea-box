@@ -1,63 +1,89 @@
-## Visual + Interaction Overhaul
+## Settings nav + icons + richer views + centered detail modal
 
-### 1. Strip the gradient / pink-orange feel → Notion-styled neutral palette with multi-hue accents
+### 1. Move Sources and Agent out of the main nav into Settings
 
-**`src/styles.css`**
-- Replace warm pastel surfaces with Notion-style neutrals: near-white background (`oklch(0.99 0.002 250)`), warm-neutral foreground (`oklch(0.22 0.01 250)`), subtle borders (`oklch(0.92 0.004 250)`).
-- Remove the body `background-image` radial gradients entirely — flat surface, no sunset wash.
-- Diversify the accent palette so it isn't mono-coral:
-  - `--primary`: muted indigo/blue `oklch(0.55 0.13 250)` (Notion-ish blue, used for primary actions)
-  - `--chart-1` blue, `--chart-2` green, `--chart-3` amber, `--chart-4` violet, `--chart-5` coral — used as category/stage tints only, never as page gradients.
-- Dark mode mirrors the same neutrals (Notion dark gray, not warm brown).
-- Keep Sora/Manrope.
+**Main nav** (`SignalShell.tsx`) becomes just:
+- Box (the only product surface)
+- Settings (gear icon, right-aligned next to the stats)
 
-**Component sweep** (find/replace `bg-gradient-to-*`, `from-primary`, `via-chart-*`, `to-chart-*`):
-- `SignalShell.tsx` — logo mark becomes flat `bg-primary` rounded square; "IdeaBox" wordmark loses the `bg-clip-text` gradient (solid foreground).
-- `FloatingAgent.tsx` — gradient pill removed (replaced in step 2).
-- `box.tsx`, `AgentStrip.tsx`, `OutcomeBoard.tsx`, any other gradient usage — flatten to solid tokens.
+**New routes**:
+- `src/routes/settings.tsx` — layout shell with a left sub-nav (Sources, Agent, later: Members/etc.) + `<Outlet />`.
+- `src/routes/settings.index.tsx` — redirect to `/settings/sources`.
+- `src/routes/settings.sources.tsx` — wraps the existing Sources list (content moved from `routes/ingestion.index.tsx`).
+- `src/routes/settings.sources.$sourceId.tsx` — wraps the existing source-detail content (moved from `routes/ingestion.$sourceId.tsx`).
+- `src/routes/settings.agent.tsx` — wraps the existing Agent content (moved from `routes/agent.tsx`).
+- Old top-level routes (`/ingestion`, `/ingestion/$sourceId`, `/agent`) keep their files but redirect to their `/settings/...` equivalents (so deep links don't 404).
 
-### 2. Rename "Ask Agent" → "Brainstorm" + replace floating pill with a centered command-modal
+**Contextual entry points** (not main nav, but reachable from the workflow):
+- **Detail modal** (the item view) gets a small "Sources" affordance in its header/footer: a link "Manage sources →" that navigates to `/settings/sources`, plus each individual mention row links to `/settings/sources/$sourceId` for that mention's source. Mentions remain rendered inline in the modal; this just adds the redirection paths the user asked for.
+- **Brainstorm modal** gets a quiet footer link "Agent settings →" that navigates to `/settings/agent` (closing the modal first; if dirty, runs the existing discard-confirm).
 
-**`src/components/signal/FloatingAgent.tsx` → rebuild**
-- Trigger: a small, quiet circular icon button bottom-right (Sparkles icon, neutral surface, subtle ring). No bouncing float animation, no gradient blur halo, no oversized pill. Tooltip shows label "Brainstorm" + kbd `B`.
-- Clicking trigger or pressing `B` opens a **centered modal** (Radix Dialog), not a side sheet:
-  - `max-w-2xl`, vertically centered, soft shadow, fade + subtle scale-in (150ms) — no springy bounce.
-  - Header: "Brainstorm" + small kbd hint (`B` to toggle, `Esc` to close).
-  - Body: reuse the existing `BrainstormSheet` content (prompt input + results list + open-request handoff), repackaged inside `DialogContent`.
-- Keyboard:
-  - `B` (no modifier, not inside input/textarea/contentEditable) toggles open/closed.
-  - `Esc` closes if the modal is "clean" (empty input, no in-flight brainstorm).
-  - `Esc` when "dirty" (user has typed a prompt or a brainstorm result is on screen) opens an AlertDialog: "Discard brainstorm? Your draft will be lost." with Cancel / Discard. Confirm closes; Cancel keeps modal open.
-  - Same dirty-check guards backdrop click and the trigger-button-toggle close path, so one-stroke open/close only happens when there's nothing to lose.
-- Remove `animate-float` keyframes from `styles.css` (no longer used).
+### 2. Remove all emojis → lucide icons with thicker strokes
 
-**`src/components/signal/BrainstormSheet.tsx`**
-- Extract its inner content into a `BrainstormPanel` component (or accept a `variant: "modal" | "sheet"` prop) so the new modal can render the same UI without the Sheet chrome. Keep the existing sheet export intact only if other callers use it; otherwise migrate fully to the modal.
+Replace every emoji currently rendered in JSX with a lucide icon. Use `strokeWidth={2.25}` consistently (slightly heavier than the lucide default 2) so the icons read confidently against the Notion-style neutral surfaces, without going to brutalist 3.
 
-### 3. "Show Parked" toggle — promote to the views row, right-aligned
+Concrete swaps:
+- Stage tabs in `box.tsx`: 💡 → `Lightbulb`, 🚀 → `Rocket`, 🗑️ → `Trash2`.
+- Nav items in `SignalShell.tsx`: 📦 → `Package` (already used in logo, fine to reuse), settings → `Settings`. Drop 📥/🤖 entirely (those nav items are gone).
+- Sweep other components for stray emojis (e.g. any source-card icons, empty states, toasts).
 
-**`src/routes/box.tsx`**
-- Find the Ideation stage toolbar. Currently "Show Parked" sits below/near the stage header at a different visual level than the views chips.
-- Restructure the toolbar into a single flex row:
-  - Left: views chips (Pinned / Has notes / Smart groups / etc. from `ViewsBar`).
-  - Right (`ml-auto`): the "Show Parked" toggle, styled as a sibling chip/switch matching the views' visual weight (same height, same radius, same muted treatment when off, accent when on).
-- Only renders on the Ideation tab (existing behavior preserved); same component, just relocated and restyled.
+The `STAGES` config in `box.tsx` swaps `emoji: string` for `Icon: LucideIcon`, and renders `<Icon className="h-3.5 w-3.5" strokeWidth={2.25} />`.
 
----
+### 3. Rework views vs filters: views = grouping/scope, pinned/notes = filters
+
+**Data-model additions** in `src/lib/mock-requests.ts` (mock data only, no schema migration):
+- `client: string` — primary client; derived per request from its first mention's `client` (e.g. "NordBank AS", "Helvetia Trust", …).
+- `app: string` — new top-level product split (e.g. "Compass", "Atlas", "Beacon"); seed 3–4 values across the existing fixtures.
+- `revenuePotential: "low" | "medium" | "high" | "critical"` — categorical, seeded per request to give the views meaningful buckets.
+- `criticalDissatisfaction: boolean` — flag for unresolved items causing critical client dissatisfaction (seeded true on a handful of high-urgency/enterprise items).
+
+**Built-in views become real groupings/scopes** in `staging-context.tsx`:
+- `All` (no grouping)
+- `By client` (groupBy `client`)
+- `By app` (groupBy `app`)
+- `By revenue potential` (groupBy `revenuePotential`, ordered critical→low)
+- `Critical dissatisfaction` (filter rule `__critical_dissatisfaction__`, no grouping)
+- Custom user-saved views still appear after the built-ins (existing `addView` flow), and the existing "Smart groups" concept aligns with these — each view is essentially a smart group.
+
+Extend `GroupBy` with `"client" | "app" | "revenuePotential"`, and extend `matchesView` with the `__critical_dissatisfaction__` sentinel.
+
+**Pinned / Has notes are demoted to filters**, not views:
+- Remove the `pinned` and `notes` built-in views from `BUILTIN_VIEWS`.
+- In `box.tsx`, render two small toggle chips next to "Show parked" on the right side of the views row: `Pinned only` and `Has notes`. Both are local filters layered on top of whatever view is active. They use the existing `pinned` / `notes` state in staging context — no new state shape.
+
+**Grouped rendering** in `box.tsx`:
+- When `activeView.groupBy !== "none"`, render the list as a flat sequence of section headers (group key + count) followed by their rows, instead of one continuous list. Sorting within a group stays the same (pinned → manual → composite score).
+- Existing DnD continues to operate on the flat visible list; manual order survives across groupings (don't try to scope manual rank per group for this pass).
+
+**ViewsBar** gets a small visual distinction between built-in grouping views (chip with a `Layers` icon prefix) and custom views (no prefix), so the user can tell smart groups apart.
+
+### 4. Detail view → centered modal
+
+`DetailDrawer.tsx` currently uses Radix Sheet (right-side drawer). Rewrite to use Dialog (centered modal), keeping the same props/API so callers don't change:
+- `max-w-3xl`, `max-h-[85vh]`, internal scroll on the body.
+- Header: title + close. Footer: existing Push / Dismiss / Park actions, plus the new "Manage sources →" link.
+- Reuses all current content sections (priority breakdown, mentions, tags, notes).
+- Rename file to `DetailModal.tsx` and update the two import sites (`box.tsx`, `FloatingAgent.tsx`), or keep the filename and just swap the implementation — pick the rename for clarity.
 
 ### Technical details
 
-- All color changes flow through `src/styles.css` tokens — no hex values in components.
-- Modal uses existing `@/components/ui/dialog` and `@/components/ui/alert-dialog`; no new deps.
-- Keyboard handler stays in `FloatingAgent`, but reads a `isDirty` flag derived from brainstorm panel state (lift state up or expose via a small context/ref).
-- `animate-float` keyframe + `.animate-float` class removed from `styles.css`.
-- No route changes, no data-model changes, no business logic changes.
+- No new dependencies. All UI from existing `@/components/ui/dialog`, `@/components/ui/alert-dialog`, lucide-react.
+- All color usage stays on semantic tokens; no new gradients.
+- `lucide-react` icons use `strokeWidth={2.25}` consistently across the app via a small inline convention (no wrapper component needed for this pass).
+- `staging-context.tsx` `STORAGE_KEY` bumps to `signal.staging.v3` so the new built-in view list replaces the old `pinned`/`notes` views without leaving orphaned entries in users' localStorage.
+- Redirect routes use `<Navigate to="/settings/..." replace />` or `loader: () => redirect({ to: "/settings/..." })`.
 
 ### Files touched
 
-- `src/styles.css` (palette + remove gradient bg + remove float keyframe)
-- `src/components/signal/FloatingAgent.tsx` (rewrite as modal trigger + dirty-aware Esc)
-- `src/components/signal/BrainstormSheet.tsx` (extract reusable panel)
-- `src/components/signal/SignalShell.tsx` (de-gradient logo/wordmark)
-- `src/routes/box.tsx` (move "Show Parked" into views row, right-aligned)
-- Light sweep of other components for stray `bg-gradient-*` / `bg-clip-text` usage tied to the old palette.
+- `src/components/signal/SignalShell.tsx` — strip nav to Box + Settings, remove emojis.
+- `src/routes/settings.tsx` (new) — settings layout with sub-nav.
+- `src/routes/settings.index.tsx` (new) — redirect to sources.
+- `src/routes/settings.sources.tsx`, `src/routes/settings.sources.$sourceId.tsx`, `src/routes/settings.agent.tsx` (new) — wrap existing content.
+- `src/routes/ingestion.index.tsx`, `src/routes/ingestion.$sourceId.tsx`, `src/routes/agent.tsx` — replace component body with redirects.
+- `src/lib/mock-requests.ts` — add `client`, `app`, `revenuePotential`, `criticalDissatisfaction` to the type and seed values across fixtures.
+- `src/lib/staging-context.tsx` — extend `GroupBy`, new built-in views, `__critical_dissatisfaction__` rule, drop pinned/notes built-ins, bump storage key.
+- `src/components/signal/ViewsBar.tsx` — render grouping views with a small `Layers` prefix; update the New View dialog's groupBy select to include client/app/revenue.
+- `src/routes/box.tsx` — emoji→icon swap, grouped rendering, new Pinned-only and Has-notes filter chips on the views row.
+- `src/components/signal/DetailDrawer.tsx` → `DetailModal.tsx` — rewrite as centered Dialog, add "Manage sources →" link, update callers.
+- `src/components/signal/FloatingAgent.tsx` — add "Agent settings →" link in modal footer (routes through dirty-confirm if needed).
+- Light sweep for stray emojis elsewhere (toasts, source cards, empty states).
