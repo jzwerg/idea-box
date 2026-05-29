@@ -758,13 +758,79 @@ function BoxPage() {
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function CompactPicker({
+  stage,
+  stageLabel,
+  StageIcon,
+  onStageChange,
+  viewName,
+  views,
+  onViewChange,
+}: {
+  stage: Stage;
+  stageLabel: string;
+  StageIcon: LucideIcon;
+  onStageChange: (k: Stage) => void;
+  viewName?: string;
+  views?: Array<{ id: string; name: string }>;
+  onViewChange?: (id: string) => void;
+}) {
+  const [mode, setMode] = useState<"stage" | "view">("stage");
+  // Force stage mode when view picker isn't available (e.g. Spark)
+  const effectiveMode = views && views.length > 0 ? mode : "stage";
   return (
-    <div className="flex flex-col items-end">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-      <span className={`font-mono tabular-nums font-semibold ${accent ? "text-primary" : "text-foreground"}`}>
-        {value}
-      </span>
+    <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-200">
+      <span className="hidden sm:inline text-border mx-1">/</span>
+      {views && views.length > 0 && (
+        <button
+          onClick={() => setMode((m) => (m === "stage" ? "view" : "stage"))}
+          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          title={effectiveMode === "stage" ? "Switch to view picker" : "Switch to stage picker"}
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2.25} />
+        </button>
+      )}
+      {effectiveMode === "stage" ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
+            <StageIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
+            <span className="font-display">{stageLabel}</span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" sideOffset={6}>
+            {STAGES.map((s) => (
+              <DropdownMenuItem
+                key={s.key}
+                onSelect={() => onStageChange(s.key)}
+                className={`gap-2 ${s.key === stage ? "font-medium" : ""}`}
+              >
+                <s.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                <span>{s.label}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
+            <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />
+            <span>{viewName}</span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" sideOffset={6}>
+            {views?.map((v) => (
+              <DropdownMenuItem
+                key={v.id}
+                onSelect={() => onViewChange?.(v.id)}
+                className={v.name === viewName ? "font-medium" : ""}
+              >
+                {v.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
+
