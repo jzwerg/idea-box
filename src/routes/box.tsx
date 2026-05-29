@@ -93,40 +93,23 @@ const USER_TYPES: UserType[] = [
   "Exec Sponsor",
 ];
 
-type Stage = "ideation" | "pushed" | "dismissed";
+type Stage = "staging" | "ideation" | "pushed" | "dismissed";
+
+const STAGE_TONE = {
+  idle: "bg-chip text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent",
+  active: "bg-card text-foreground border border-border shadow-sm",
+};
 
 const STAGES: Array<{
   key: Stage;
   label: string;
   Icon: LucideIcon;
-  status: Status;
-  tone: string;
-  activeTone: string;
+  status: Status | null;
 }> = [
-  {
-    key: "ideation",
-    label: "Ideation",
-    Icon: Lightbulb,
-    status: "new",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
-    activeTone: "bg-card text-foreground border border-border shadow-sm",
-  },
-  {
-    key: "pushed",
-    label: "Pushed",
-    Icon: Rocket,
-    status: "pushed",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
-    activeTone: "bg-card text-foreground border border-border shadow-sm",
-  },
-  {
-    key: "dismissed",
-    label: "Dismissed",
-    Icon: Trash2,
-    status: "dismissed",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
-    activeTone: "bg-card text-foreground border border-border shadow-sm",
-  },
+  { key: "staging", label: "Staging", Icon: Layers, status: null },
+  { key: "ideation", label: "Ideation", Icon: Lightbulb, status: "new" },
+  { key: "pushed", label: "Pushed", Icon: Rocket, status: "pushed" },
+  { key: "dismissed", label: "Dismissed", Icon: Trash2, status: "dismissed" },
 ];
 
 function BoxPage() {
