@@ -274,6 +274,7 @@ function BoxPage() {
 
   const counts = useMemo(
     () => ({
+      staging: 10, // mock pull count — see StagingView
       ideation: requests.filter((r) => r.status === "new" && !parked[r.id]).length,
       pushed: requests.filter((r) => r.status === "pushed").length,
       dismissed: requests.filter((r) => r.status === "dismissed").length,
