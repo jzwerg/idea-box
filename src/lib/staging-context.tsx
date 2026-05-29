@@ -317,12 +317,14 @@ export function matchesView(
     productArea: string;
     pinned: boolean;
     hasNote: boolean;
+    criticalDissatisfaction?: boolean;
   },
 ): boolean {
   const r = view.rule.trim();
   if (!r) return true;
   if (r === "__pinned__") return ctx.pinned;
   if (r === "__has_notes__") return ctx.hasNote;
+  if (r === "__critical_dissatisfaction__") return !!ctx.criticalDissatisfaction;
   const haystack = [
     ctx.title,
     ctx.description,
