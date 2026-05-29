@@ -1,16 +1,9 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, Save, Tag as TagIcon, Sparkles } from "lucide-react";
+import { Save, Tag as TagIcon, Sparkles } from "lucide-react";
 import type { RequestRecord } from "@/lib/mock-requests";
 import { useStaging, scoreRequest } from "@/lib/staging-context";
 import { useAgent } from "@/lib/agent-context";
@@ -23,17 +16,28 @@ interface Ranked {
 }
 
 interface Props {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   requests: RequestRecord[];
   onOpenRequest: (id: string) => void;
+  idea: string;
+  setIdea: (v: string) => void;
+  submitted: string;
+  setSubmitted: (v: string) => void;
 }
 
-export function BrainstormSheet({ open, onOpenChange, requests, onOpenRequest }: Props) {
+/**
+ * Brainstorm panel — pure content, no chrome. Renders inside a Dialog.
+ * Owns search/submit state via props so the parent can detect "dirty".
+ */
+export function BrainstormPanel({
+  requests,
+  onOpenRequest,
+  idea,
+  setIdea,
+  submitted,
+  setSubmitted,
+}: Props) {
   const { tags, addView, addTag } = useStaging();
   const { proposeRule } = useAgent();
-  const [idea, setIdea] = useState("");
-  const [submitted, setSubmitted] = useState("");
 
   const ranked = useMemo<Ranked[]>(() => {
     const q = submitted.trim();
@@ -84,121 +88,103 @@ export function BrainstormSheet({ open, onOpenChange, requests, onOpenRequest }:
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-lg w-full flex flex-col p-0">
-        <SheetHeader className="px-6 pt-6 pb-3 border-b">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <Lightbulb className="h-4 w-4 text-amber-500" />
-            Brainstorm
-          </SheetTitle>
-          <SheetDescription className="text-xs">
-            Describe an idea, problem, or theme. We'll surface related requests across
-            titles, descriptions, tags, user type, and product area.
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="px-6 py-4 border-b space-y-2">
-          <Textarea
-            value={idea}
-            onChange={(e) => setIdea(e.target.value)}
-            placeholder="e.g. give admins a way to bulk-approve onboarding KYC checks"
-            rows={4}
-            className="text-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                find();
-              }
-            }}
-          />
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={find} disabled={!idea.trim()} className="gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" /> Find related
-            </Button>
-            <Button size="sm" variant="ghost" onClick={clear} disabled={!idea && !submitted}>
-              Clear
-            </Button>
-            <span className="text-[10px] text-muted-foreground ml-auto">⌘↵ to search</span>
-          </div>
+    <div className="flex flex-col max-h-[70vh]">
+      <div className="px-1 pb-3 space-y-2">
+        <Textarea
+          autoFocus
+          value={idea}
+          onChange={(e) => setIdea(e.target.value)}
+          placeholder="e.g. give admins a way to bulk-approve onboarding KYC checks"
+          rows={3}
+          className="text-sm resize-none"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              find();
+            }
+          }}
+        />
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={find} disabled={!idea.trim()} className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" /> Find related
+          </Button>
+          <Button size="sm" variant="ghost" onClick={clear} disabled={!idea && !submitted}>
+            Clear
+          </Button>
+          <span className="text-[10px] text-muted-foreground ml-auto font-mono">⌘↵ search</span>
         </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {!submitted && (
-            <div className="px-6 py-10 text-center text-xs text-muted-foreground">
-              Type an idea above and hit <span className="font-medium">Find related</span>.
-            </div>
-          )}
-          {submitted && ranked.length === 0 && (
-            <div className="px-6 py-10 text-center text-xs text-muted-foreground">
-              No related requests found in staging.
-            </div>
-          )}
-          {ranked.length > 0 && (
-            <div>
-              <div className="px-6 py-2 flex items-center justify-between text-[11px] uppercase tracking-wider text-muted-foreground border-b bg-muted/20">
-                <span>
-                  <span className="font-mono text-foreground">{ranked.length}</span> related
-                </span>
-                <span>relevance</span>
-              </div>
-              <ul className="divide-y">
-                {ranked.map(({ request: r, pct, hits }) => (
-                  <li
-                    key={r.id}
-                    onClick={() => {
-                      onOpenRequest(r.id);
-                      onOpenChange(false);
-                    }}
-                    className="px-6 py-3 hover:bg-accent/40 cursor-pointer"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex flex-col items-end gap-0.5 w-12 shrink-0">
-                        <span className="font-mono text-sm tabular-nums text-primary">{pct}%</span>
-                        <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{r.title}</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                          {r.userType} · {r.productArea}
-                        </div>
-                        {hits.length > 0 && (
-                          <div className="flex gap-1 flex-wrap mt-1.5">
-                            {hits.slice(0, 5).map((h) => (
-                              <Badge
-                                key={h}
-                                variant="outline"
-                                className="text-[10px] py-0 h-4 font-normal text-muted-foreground"
-                              >
-                                {h}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {ranked.length > 0 && (
-          <div className="border-t px-6 py-3 flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={saveAsView} className="gap-1.5">
-              <Save className="h-3.5 w-3.5" /> Save as view
-            </Button>
-            <Button size="sm" variant="outline" onClick={tagAll} className="gap-1.5">
-              <TagIcon className="h-3.5 w-3.5" /> Tag all
-            </Button>
+      <div className="flex-1 overflow-y-auto -mx-6 px-6 border-t border-border/60">
+        {!submitted && (
+          <div className="py-10 text-center text-xs text-muted-foreground">
+            Type an idea above and hit <span className="font-medium">Find related</span>.
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+        {submitted && ranked.length === 0 && (
+          <div className="py-10 text-center text-xs text-muted-foreground">
+            No related requests found in the box.
+          </div>
+        )}
+        {ranked.length > 0 && (
+          <div>
+            <div className="py-2 flex items-center justify-between text-[11px] uppercase tracking-wider text-muted-foreground">
+              <span>
+                <span className="font-mono text-foreground">{ranked.length}</span> related
+              </span>
+              <span>relevance</span>
+            </div>
+            <ul className="divide-y divide-border/60">
+              {ranked.map(({ request: r, pct, hits }) => (
+                <li
+                  key={r.id}
+                  onClick={() => onOpenRequest(r.id)}
+                  className="py-3 hover:bg-accent/40 cursor-pointer -mx-2 px-2 rounded-md"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-end gap-0.5 w-12 shrink-0">
+                      <span className="font-mono text-sm tabular-nums text-primary">{pct}%</span>
+                      <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{r.title}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        {r.userType} · {r.productArea}
+                      </div>
+                      {hits.length > 0 && (
+                        <div className="flex gap-1 flex-wrap mt-1.5">
+                          {hits.slice(0, 5).map((h) => (
+                            <Badge
+                              key={h}
+                              variant="outline"
+                              className="text-[10px] py-0 h-4 font-normal text-muted-foreground"
+                            >
+                              {h}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {ranked.length > 0 && (
+        <div className="pt-3 mt-2 border-t border-border/60 flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={saveAsView} className="gap-1.5">
+            <Save className="h-3.5 w-3.5" /> Save as view
+          </Button>
+          <Button size="sm" variant="outline" onClick={tagAll} className="gap-1.5">
+            <TagIcon className="h-3.5 w-3.5" /> Tag all
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
