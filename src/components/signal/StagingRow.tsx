@@ -126,7 +126,21 @@ export function StagingRow({
       <td className="px-2 py-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`inline-block h-2 w-2 rounded-full shrink-0 ${flag.dot}`}
+              title={flag.label}
+              aria-label={flag.label}
+            />
             <span className="font-medium">{r.title}</span>
+            {critical && (
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/30"
+                title="Critical client dissatisfaction"
+              >
+                <Flag className="h-2.5 w-2.5" strokeWidth={2.5} />
+                Critical
+              </span>
+            )}
             <Badge
               variant="outline"
               className={`font-normal text-[10px] py-0 h-4 ${USER_TYPE_TONE[r.userType]}`}
