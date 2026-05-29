@@ -452,17 +452,42 @@ function BoxPage() {
 
   const isSpark = stage === "spark";
 
+  const currentStageInfo = STAGES.find((s) => s.key === stage)!;
+  const visibleViews = views.filter(
+    (v) => v.builtin || !v.stage || v.stage === stage,
+  );
+
   return (
     <SignalShell
-      rightSlot={
-        <>
-          <Stat label="In box" value={(counts.shape + counts.launch + counts.shelve).toString()} />
-          <Stat label="Active" value={counts.shape.toString()} accent />
-        </>
+      headerInline={
+        collapsed && !isSpark ? (
+          <CompactPicker
+            stage={stage}
+            stageLabel={currentStageInfo.label}
+            StageIcon={currentStageInfo.Icon}
+            onStageChange={(k) => {
+              setStage(k);
+              setSelectedIds(new Set());
+            }}
+            viewName={activeView?.name ?? "All"}
+            views={visibleViews.map((v) => ({ id: v.id, name: v.name }))}
+            onViewChange={setActiveView}
+          />
+        ) : collapsed && isSpark ? (
+          <CompactPicker
+            stage={stage}
+            stageLabel={currentStageInfo.label}
+            StageIcon={currentStageInfo.Icon}
+            onStageChange={(k) => {
+              setStage(k);
+              setSelectedIds(new Set());
+            }}
+          />
+        ) : null
       }
     >
       {/* Stage chips — outside the box, on the page surface */}
-      <div className="px-6 pt-6 pb-3">
+      <div ref={chipsSentinelRef} className="px-6 pt-6 pb-3">
         <div className="flex items-center gap-2 flex-wrap">
           {STAGES.map((s) => {
             const active = stage === s.key;
@@ -492,6 +517,7 @@ function BoxPage() {
           })}
         </div>
       </div>
+
 
       {/* The Box — bordered surface that holds all stage content */}
       <div className="px-6 pb-6 flex-1 min-h-0">
