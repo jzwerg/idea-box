@@ -20,6 +20,7 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-chip: var(--chip);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -59,13 +60,15 @@
 :root {
   --radius: 0.625rem;
 
-  /* Notion-style neutrals — warm but quiet */
-  --background: oklch(0.995 0.002 250);
+  /* Notion-style neutrals — soft surface, crisp card */
+  --background: oklch(0.965 0.005 250);
   --foreground: oklch(0.22 0.01 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.01 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.01 260);
+  /* Chip surface — sits between background and card */
+  --chip: oklch(0.985 0.004 250);
 
   /* Muted indigo primary (used sparingly for action) */
   --primary: oklch(0.52 0.13 255);
@@ -107,9 +110,10 @@
 .dark {
   --background: oklch(0.17 0.005 260);
   --foreground: oklch(0.95 0.005 250);
-  --card: oklch(0.2 0.006 260);
+  --card: oklch(0.22 0.006 260);
   --card-foreground: oklch(0.95 0.005 250);
-  --popover: oklch(0.2 0.006 260);
+  --chip: oklch(0.2 0.006 260);
+  --popover: oklch(0.22 0.006 260);
   --popover-foreground: oklch(0.95 0.005 250);
   --primary: oklch(0.66 0.13 255);
   --primary-foreground: oklch(0.17 0.005 260);

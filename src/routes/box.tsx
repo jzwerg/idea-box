@@ -24,6 +24,7 @@ import {
   Rocket,
   Pin,
   StickyNote,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -55,6 +56,7 @@ import { DetailDrawer } from "@/components/signal/DetailDrawer";
 import { PushJiraDialog } from "@/components/signal/PushJiraDialog";
 import { SignalShell } from "@/components/signal/SignalShell";
 import { StagingRow } from "@/components/signal/StagingRow";
+import { StagingView } from "@/components/signal/StagingView";
 import { ViewsBar } from "@/components/signal/ViewsBar";
 import { ParkedBadge } from "@/components/signal/ParkedBadge";
 import { compositeWith, useAgent } from "@/lib/agent-context";
@@ -91,40 +93,23 @@ const USER_TYPES: UserType[] = [
   "Exec Sponsor",
 ];
 
-type Stage = "ideation" | "pushed" | "dismissed";
+type Stage = "staging" | "ideation" | "pushed" | "dismissed";
+
+const STAGE_TONE = {
+  idle: "bg-chip text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent",
+  active: "bg-card text-foreground border border-border shadow-sm",
+};
 
 const STAGES: Array<{
   key: Stage;
   label: string;
   Icon: LucideIcon;
-  status: Status;
-  tone: string;
-  activeTone: string;
+  status: Status | null;
 }> = [
-  {
-    key: "ideation",
-    label: "Ideation",
-    Icon: Lightbulb,
-    status: "new",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
-    activeTone: "bg-card text-foreground border border-border shadow-sm",
-  },
-  {
-    key: "pushed",
-    label: "Pushed",
-    Icon: Rocket,
-    status: "pushed",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
-    activeTone: "bg-card text-foreground border border-border shadow-sm",
-  },
-  {
-    key: "dismissed",
-    label: "Dismissed",
-    Icon: Trash2,
-    status: "dismissed",
-    tone: "text-muted-foreground hover:text-foreground hover:bg-accent",
-    activeTone: "bg-card text-foreground border border-border shadow-sm",
-  },
+  { key: "staging", label: "Staging", Icon: Layers, status: null },
+  { key: "ideation", label: "Ideation", Icon: Lightbulb, status: "new" },
+  { key: "pushed", label: "Pushed", Icon: Rocket, status: "pushed" },
+  { key: "dismissed", label: "Dismissed", Icon: Trash2, status: "dismissed" },
 ];
 
 function BoxPage() {
@@ -289,6 +274,7 @@ function BoxPage() {
 
   const counts = useMemo(
     () => ({
+      staging: 10, // mock pull count — see StagingView
       ideation: requests.filter((r) => r.status === "new" && !parked[r.id]).length,
       pushed: requests.filter((r) => r.status === "pushed").length,
       dismissed: requests.filter((r) => r.status === "dismissed").length,
@@ -429,6 +415,8 @@ function BoxPage() {
 
   const visibleIds = visible.map((r) => r.id);
 
+  const isStaging = stage === "staging";
+
   return (
     <SignalShell
       rightSlot={
@@ -438,8 +426,8 @@ function BoxPage() {
         </>
       }
     >
-      {/* Stage tabs — the box's three lanes */}
-      <div className="px-6 pt-5 pb-3">
+      {/* Stage chips — outside the box, on the page surface */}
+      <div className="px-6 pt-6 pb-3">
         <div className="flex items-center gap-2 flex-wrap">
           {STAGES.map((s) => {
             const active = stage === s.key;
@@ -452,14 +440,14 @@ function BoxPage() {
                   setSelectedIds(new Set());
                 }}
                 className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all flex items-center gap-2 ${
-                  active ? s.activeTone : `bg-card/40 ${s.tone} border border-transparent`
+                  active ? STAGE_TONE.active : STAGE_TONE.idle
                 }`}
               >
                 <s.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
                 <span className="font-display">{s.label}</span>
                 <span
                   className={`font-mono tabular-nums text-xs rounded-full px-1.5 py-0.5 ${
-                    active ? "bg-background/70 text-foreground" : "bg-muted/60 text-muted-foreground"
+                    active ? "bg-background/70 text-foreground" : "bg-card text-muted-foreground"
                   }`}
                 >
                   {count}
@@ -470,173 +458,184 @@ function BoxPage() {
         </div>
       </div>
 
-      {/* Views — sub-filters within a stage */}
-      {isIdeation && (
-        <div className="px-6 py-2.5 flex items-center gap-3 flex-wrap border-y border-border/60 bg-card/30">
-          <ViewsBar />
-          <div className="ml-auto flex items-center gap-2">
-            {hasManualOrdering && (
-              <button
-                onClick={clearManualOrdering}
-                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                <RotateCcw className="h-3 w-3" /> Reset to agent order
-              </button>
-            )}
-            {counts.parked > 0 && (
-              <button
-                onClick={() => setIncludeParked((v) => !v)}
-                className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 transition-colors border ${
-                  includeParked
-                    ? "bg-accent text-foreground border-border"
-                    : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:bg-accent/50"
-                }`}
-                title="Include parked items"
-              >
-                <MoonStar className="h-3 w-3" />
-                {includeParked ? "Hide parked" : "Show parked"}
-                <span className="font-mono tabular-nums">{counts.parked}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Filter bar */}
-      <div className="border-b border-border/60 bg-background/50 px-6 py-2.5 flex items-center gap-3 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search the box…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-9 h-9 w-64 text-sm rounded-full bg-card/60"
-          />
-        </div>
-        <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v as ProductArea | "all")}>
-          <SelectTrigger className="h-9 w-44 text-sm rounded-full bg-card/60">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All product areas</SelectItem>
-            {AREAS.map((a) => (
-              <SelectItem key={a} value={a}>{a}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={userTypeFilter} onValueChange={(v) => setUserTypeFilter(v as UserType | "all")}>
-          <SelectTrigger className="h-9 w-48 text-sm rounded-full bg-card/60">
-            <Users className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All user types</SelectItem>
-            {USER_TYPES.map((u) => (
-              <SelectItem key={u} value={u}>{u}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
-        <div className="border-b border-border/60 bg-primary/[0.06] px-6 py-2 flex items-center justify-between">
-          <span className="text-sm">
-            <span className="font-mono font-semibold text-primary">{selectedIds.size}</span>
-            <span className="text-muted-foreground ml-1.5">selected</span>
-          </span>
-          <div className="flex items-center gap-2">
-            {isIdeation && (
-              <>
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" disabled={selectedIds.size < 2} onClick={merge}>
-                  <GitMerge className="h-3.5 w-3.5" /> Merge
-                </Button>
-                {!includeParked ? (
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkPark}>
-                    <MoonStar className="h-3.5 w-3.5" /> Park
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkUnpark}>
-                    <ArchiveRestore className="h-3.5 w-3.5" /> Unpark
-                  </Button>
-                )}
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkDismiss}>
-                  <Trash2 className="h-3.5 w-3.5" /> Dismiss
-                </Button>
-                <Button size="sm" className="h-8 gap-1.5 rounded-full" onClick={() => openPush(Array.from(selectedIds))}>
-                  <SendIcon className="h-3.5 w-3.5" /> Push to Jira
-                </Button>
-              </>
-            )}
-            {!isIdeation && (
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkReopen}>
-                <RotateCcw className="h-3.5 w-3.5" /> Move to Ideation
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="flex-1">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <table className="w-full text-sm">
-            <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
-              <tr>
-                <th className="w-8 px-2 py-2.5"></th>
-                <th className="w-8 px-1 py-2.5"></th>
-                <th className="w-8 px-2 py-2.5 text-left">
-                  <Checkbox checked={allVisibleChecked} onCheckedChange={toggleAll} />
-                </th>
-                <th className="w-10 px-1 py-2.5 text-left font-mono">#</th>
-                <th className="px-2 py-2.5 text-left font-medium">Request</th>
-                <th className="px-2 py-2.5 text-left font-medium w-40">Area</th>
-                <th className="px-2 py-2.5 text-left font-medium w-28">Sources</th>
-                <th className="px-2 py-2.5 text-right font-medium w-16">Freq</th>
-                <th className="px-2 py-2.5 text-left font-medium w-40">Priority</th>
-                <th className="w-10 px-2 py-2.5"></th>
-                <th className="px-4 py-2.5 text-right font-medium w-28">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.length === 0 && (
-                <tr>
-                  <td colSpan={11} className="text-center py-20 text-muted-foreground text-sm">
-                    {stage === "ideation" && "Box is empty here. Try toggling a view or showing parked items."}
-                    {stage === "pushed" && "Nothing pushed yet. Ship something from Ideation 🚀"}
-                    {stage === "dismissed" && "No dismissed items."}
-                  </td>
-                </tr>
+      {/* The Box — bordered surface that holds all stage content */}
+      <div className="px-6 pb-6 flex-1 min-h-0">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
+          {isStaging ? (
+            <StagingView />
+          ) : (
+            <>
+              {/* Views — sub-filters within a stage */}
+              {isIdeation && (
+                <div className="px-5 py-2.5 flex items-center gap-3 flex-wrap border-b border-border/60 bg-chip/60">
+                  <ViewsBar />
+                  <div className="ml-auto flex items-center gap-2">
+                    {hasManualOrdering && (
+                      <button
+                        onClick={clearManualOrdering}
+                        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                      >
+                        <RotateCcw className="h-3 w-3" /> Reset to agent order
+                      </button>
+                    )}
+                    {counts.parked > 0 && (
+                      <button
+                        onClick={() => setIncludeParked((v) => !v)}
+                        className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 transition-colors border ${
+                          includeParked
+                            ? "bg-accent text-foreground border-border"
+                            : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:bg-accent/50"
+                        }`}
+                        title="Include parked items"
+                      >
+                        <MoonStar className="h-3 w-3" />
+                        {includeParked ? "Hide parked" : "Show parked"}
+                        <span className="font-mono tabular-nums">{counts.parked}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
-              <SortableContext items={visibleIds} strategy={verticalListSortingStrategy}>
-                {visible.map((r, idx) => (
-                  <StagingRow
-                    key={r.id}
-                    request={r}
-                    index={idx}
-                    checked={selectedIds.has(r.id)}
-                    onCheck={(c) =>
-                      setSelectedIds((s) => {
-                        const n = new Set(s);
-                        if (c) n.add(r.id);
-                        else n.delete(r.id);
-                        return n;
-                      })
-                    }
-                    onOpen={() => setOpenId(r.id)}
-                    showCheckbox={true}
-                    draggable={isIdeation && !includeParked}
-                    parkedBadge={
-                      isIdeation && parked[r.id] ? (
-                        <ParkedBadge info={parked[r.id]} onUnpark={() => unparkRequest(r.id)} />
-                      ) : null
-                    }
+
+              {/* Filter bar */}
+              <div className="border-b border-border/60 bg-chip/40 px-5 py-2.5 flex items-center gap-3 flex-wrap">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search the box…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-9 h-9 w-64 text-sm rounded-full bg-card"
                   />
-                ))}
-              </SortableContext>
-            </tbody>
-          </table>
-        </DndContext>
+                </div>
+                <Select value={areaFilter} onValueChange={(v) => setAreaFilter(v as ProductArea | "all")}>
+                  <SelectTrigger className="h-9 w-44 text-sm rounded-full bg-card">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All product areas</SelectItem>
+                    {AREAS.map((a) => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={userTypeFilter} onValueChange={(v) => setUserTypeFilter(v as UserType | "all")}>
+                  <SelectTrigger className="h-9 w-48 text-sm rounded-full bg-card">
+                    <Users className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All user types</SelectItem>
+                    {USER_TYPES.map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Bulk action bar */}
+              {selectedIds.size > 0 && (
+                <div className="border-b border-border/60 bg-primary/[0.06] px-5 py-2 flex items-center justify-between">
+                  <span className="text-sm">
+                    <span className="font-mono font-semibold text-primary">{selectedIds.size}</span>
+                    <span className="text-muted-foreground ml-1.5">selected</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {isIdeation && (
+                      <>
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" disabled={selectedIds.size < 2} onClick={merge}>
+                          <GitMerge className="h-3.5 w-3.5" /> Merge
+                        </Button>
+                        {!includeParked ? (
+                          <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkPark}>
+                            <MoonStar className="h-3.5 w-3.5" /> Park
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkUnpark}>
+                            <ArchiveRestore className="h-3.5 w-3.5" /> Unpark
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkDismiss}>
+                          <Trash2 className="h-3.5 w-3.5" /> Dismiss
+                        </Button>
+                        <Button size="sm" className="h-8 gap-1.5 rounded-full" onClick={() => openPush(Array.from(selectedIds))}>
+                          <SendIcon className="h-3.5 w-3.5" /> Push to Jira
+                        </Button>
+                      </>
+                    )}
+                    {!isIdeation && (
+                      <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkReopen}>
+                        <RotateCcw className="h-3.5 w-3.5" /> Move to Ideation
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Table */}
+              <div className="flex-1 overflow-auto">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                  <table className="w-full text-sm">
+                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
+                      <tr>
+                        <th className="w-8 px-2 py-2.5"></th>
+                        <th className="w-8 px-1 py-2.5"></th>
+                        <th className="w-8 px-2 py-2.5 text-left">
+                          <Checkbox checked={allVisibleChecked} onCheckedChange={toggleAll} />
+                        </th>
+                        <th className="w-10 px-1 py-2.5 text-left font-mono">#</th>
+                        <th className="px-2 py-2.5 text-left font-medium">Request</th>
+                        <th className="px-2 py-2.5 text-left font-medium w-40">Area</th>
+                        <th className="px-2 py-2.5 text-left font-medium w-28">Sources</th>
+                        <th className="px-2 py-2.5 text-right font-medium w-16">Freq</th>
+                        <th className="px-2 py-2.5 text-left font-medium w-40">Priority</th>
+                        <th className="w-10 px-2 py-2.5"></th>
+                        <th className="px-4 py-2.5 text-right font-medium w-28">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visible.length === 0 && (
+                        <tr>
+                          <td colSpan={11} className="text-center py-20 text-muted-foreground text-sm">
+                            {stage === "ideation" && "Box is empty here. Try toggling a view or showing parked items."}
+                            {stage === "pushed" && "Nothing pushed yet. Ship something from Ideation."}
+                            {stage === "dismissed" && "No dismissed items."}
+                          </td>
+                        </tr>
+                      )}
+                      <SortableContext items={visibleIds} strategy={verticalListSortingStrategy}>
+                        {visible.map((r, idx) => (
+                          <StagingRow
+                            key={r.id}
+                            request={r}
+                            index={idx}
+                            checked={selectedIds.has(r.id)}
+                            onCheck={(c) =>
+                              setSelectedIds((s) => {
+                                const n = new Set(s);
+                                if (c) n.add(r.id);
+                                else n.delete(r.id);
+                                return n;
+                              })
+                            }
+                            onOpen={() => setOpenId(r.id)}
+                            showCheckbox={true}
+                            draggable={isIdeation && !includeParked}
+                            parkedBadge={
+                              isIdeation && parked[r.id] ? (
+                                <ParkedBadge info={parked[r.id]} onUnpark={() => unparkRequest(r.id)} />
+                              ) : null
+                            }
+                          />
+                        ))}
+                      </SortableContext>
+                    </tbody>
+                  </table>
+                </DndContext>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <DetailDrawer
