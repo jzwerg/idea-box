@@ -22,7 +22,7 @@ export function SignalShell({
 }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border/60 bg-background/85 backdrop-blur-xl sticky top-0 z-30">
+      <header className="bg-background sticky top-0 z-30">
         <div className="px-6 py-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Left: collapsed stage/view picker slot */}
           <div className="flex items-center min-w-0 justify-self-start">
