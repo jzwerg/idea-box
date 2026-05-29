@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, X, LayoutGrid } from "lucide-react";
+import { Plus, X, LayoutGrid, Layers } from "lucide-react";
 
 export function ViewsBar() {
   const { views, activeViewId, setActiveView, removeView, addView } = useStaging();
@@ -26,9 +26,10 @@ export function ViewsBar() {
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground mr-1" />
+      <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground mr-1" strokeWidth={2.25} />
       {views.map((v) => {
         const active = v.id === activeViewId;
+        const isGrouping = !!v.builtin && v.groupBy !== "none";
         return (
           <div
             key={v.id}
@@ -40,9 +41,10 @@ export function ViewsBar() {
           >
             <button
               onClick={() => setActiveView(v.id)}
-              className="pl-3 pr-2 py-1"
+              className="pl-2.5 pr-2 py-1 inline-flex items-center gap-1"
               title={v.rule || "All requests"}
             >
+              {isGrouping && <Layers className="h-3 w-3" strokeWidth={2.25} />}
               {v.name}
             </button>
             {!v.builtin && (
@@ -54,7 +56,7 @@ export function ViewsBar() {
                 className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                 aria-label={`Remove ${v.name}`}
               >
-                <X className="h-3 w-3" />
+                <X className="h-3 w-3" strokeWidth={2.25} />
               </button>
             )}
           </div>
@@ -63,7 +65,7 @@ export function ViewsBar() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/60 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-foreground/40">
-            <Plus className="h-3 w-3" /> New view
+            <Plus className="h-3 w-3" strokeWidth={2.25} /> New view
           </button>
         </DialogTrigger>
         <NewViewDialog
@@ -124,6 +126,9 @@ function NewViewDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No grouping</SelectItem>
+              <SelectItem value="client">Client</SelectItem>
+              <SelectItem value="app">App</SelectItem>
+              <SelectItem value="revenuePotential">Revenue potential</SelectItem>
               <SelectItem value="userType">User type</SelectItem>
               <SelectItem value="productArea">Product area</SelectItem>
               <SelectItem value="tag">Tag</SelectItem>
