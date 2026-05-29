@@ -170,7 +170,6 @@ function BoxPage() {
     io.observe(el);
     return () => io.disconnect();
   }, []);
-  const activeView = views.find((v) => v.id === activeViewId) ?? views[0];
 
   useEffect(() => {
     registerApply(({ instructions, runInstructions }) => {
