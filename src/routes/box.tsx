@@ -542,6 +542,45 @@ function BoxPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={flagFilter} onValueChange={(v) => setFlagFilter(v as typeof flagFilter)}>
+                  <SelectTrigger className="h-9 w-48 text-sm rounded-full bg-card">
+                    <Flag className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All flags</SelectItem>
+                    <SelectItem value="critical">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.66_0.17_25)]" />
+                        Critical revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="high">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.74_0.13_75)]" />
+                        High revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.6_0.14_250)]" />
+                        Medium revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="low">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[oklch(0.85_0.01_250)]" />
+                        Low revenue
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="dissatisfaction">
+                      <span className="inline-flex items-center gap-2 text-destructive">
+                        <Flag className="h-3 w-3" strokeWidth={2.5} />
+                        Critical dissatisfaction
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Bulk action bar */}
