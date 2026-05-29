@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeftRight, ChevronDown, LayoutGrid } from "lucide-react";
+import { ChevronDown, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -460,7 +460,7 @@ function BoxPage() {
   return (
     <SignalShell
       headerInline={
-        collapsed && !isSpark ? (
+        collapsed ? (
           <CompactPicker
             stage={stage}
             stageLabel={currentStageInfo.label}
@@ -469,19 +469,9 @@ function BoxPage() {
               setStage(k);
               setSelectedIds(new Set());
             }}
-            viewName={activeView?.name ?? "All"}
-            views={visibleViews.map((v) => ({ id: v.id, name: v.name }))}
+            viewName={isSpark ? undefined : activeView?.name ?? "All"}
+            views={isSpark ? undefined : visibleViews.map((v) => ({ id: v.id, name: v.name }))}
             onViewChange={setActiveView}
-          />
-        ) : collapsed && isSpark ? (
-          <CompactPicker
-            stage={stage}
-            stageLabel={currentStageInfo.label}
-            StageIcon={currentStageInfo.Icon}
-            onStageChange={(k) => {
-              setStage(k);
-              setSelectedIds(new Set());
-            }}
           />
         ) : null
       }
@@ -678,7 +668,8 @@ function BoxPage() {
               <div>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                   <table className="w-full text-sm">
-                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 sticky top-[57px] z-20 bg-card">
+                    <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 sticky top-[49px] z-20 bg-card shadow-[0_1px_0_0_var(--border)]">
+
 
                       <tr>
                         <th className="w-8 px-2 py-2.5"></th>
@@ -775,60 +766,50 @@ function CompactPicker({
   views?: Array<{ id: string; name: string }>;
   onViewChange?: (id: string) => void;
 }) {
-  const [mode, setMode] = useState<"stage" | "view">("stage");
-  // Force stage mode when view picker isn't available (e.g. Spark)
-  const effectiveMode = views && views.length > 0 ? mode : "stage";
   return (
-    <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-200">
-      <span className="hidden sm:inline text-border mx-1">/</span>
-      {views && views.length > 0 && (
-        <button
-          onClick={() => setMode((m) => (m === "stage" ? "view" : "stage"))}
-          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-          title={effectiveMode === "stage" ? "Switch to view picker" : "Switch to stage picker"}
-        >
-          <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2.25} />
-        </button>
-      )}
-      {effectiveMode === "stage" ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
-            <StageIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
-            <span className="font-display">{stageLabel}</span>
-            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" sideOffset={6}>
-            {STAGES.map((s) => (
-              <DropdownMenuItem
-                key={s.key}
-                onSelect={() => onStageChange(s.key)}
-                className={`gap-2 ${s.key === stage ? "font-medium" : ""}`}
-              >
-                <s.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
-                <span>{s.label}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
-            <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />
-            <span>{viewName}</span>
-            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" sideOffset={6}>
-            {views?.map((v) => (
-              <DropdownMenuItem
-                key={v.id}
-                onSelect={() => onViewChange?.(v.id)}
-                className={v.name === viewName ? "font-medium" : ""}
-              >
-                {v.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200 min-w-0">
+      <DropdownMenu>
+        <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none">
+          <StageIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
+          <span className="font-display">{stageLabel}</span>
+          <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={2.25} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" sideOffset={6}>
+          {STAGES.map((s) => (
+            <DropdownMenuItem
+              key={s.key}
+              onSelect={() => onStageChange(s.key)}
+              className={`gap-2 ${s.key === stage ? "font-medium" : ""}`}
+            >
+              <s.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+              <span>{s.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {views && views.length > 0 && viewName && (
+        <>
+          <span className="text-border/80 text-xs select-none">/</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium text-foreground bg-chip hover:bg-accent border border-border/60 transition-colors outline-none min-w-0">
+              <LayoutGrid className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+              <span className="truncate">{viewName}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" strokeWidth={2.25} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={6}>
+              {views.map((v) => (
+                <DropdownMenuItem
+                  key={v.id}
+                  onSelect={() => onViewChange?.(v.id)}
+                  className={v.name === viewName ? "font-medium" : ""}
+                >
+                  {v.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       )}
     </div>
   );
