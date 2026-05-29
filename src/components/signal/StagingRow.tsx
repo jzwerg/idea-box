@@ -62,11 +62,6 @@ export function StagingRow({
   const sortable = useSortable({ id: r.id, disabled: !draggable });
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-  };
 
   const score = compositeWith(r.priority, weights);
   const uniqueSources = Array.from(new Set(r.mentions.map((m) => m.source)));
