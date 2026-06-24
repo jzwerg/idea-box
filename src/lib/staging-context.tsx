@@ -8,6 +8,16 @@ import {
   type ReactNode,
 } from "react";
 
+import {
+  getStagingPrefs,
+  upsertStagingPref,
+  clearManualOrdering as clearManualOrderingFn,
+  getSavedViews,
+  upsertView,
+  deleteView as deleteViewFn,
+  recordTrustEvent,
+} from "./api/staging.functions";
+
 export type GroupBy =
   | "none"
   | "userType"
@@ -72,48 +82,16 @@ const BUILTIN_VIEWS: SavedView[] = [
   { id: "critical", name: "Critical dissatisfaction", rule: "__critical_dissatisfaction__", groupBy: "none", scope: "spark", builtin: true },
 ];
 
-const STORAGE_KEY = "signal.staging.v3";
-
-
-// Seed a few parked items for the demo — gives the Parked tab content on first run.
-const SEED_PARKED: Record<string, ParkInfo> = {
-  req_019: { reason: "low-confidence", at: new Date().toISOString(), note: "Agent unsure — review" },
-  req_025: { reason: "low-confidence", at: new Date().toISOString(), note: "Agent unsure — review" },
-  req_015: { reason: "snoozed", at: new Date().toISOString(), note: "Revisit after Q3" },
-};
-
 const initial: StagingState = {
   pinned: {},
   manualRank: {},
   tags: {},
   notes: {},
-  parked: SEED_PARKED,
+  parked: {},
   views: BUILTIN_VIEWS,
   activeViewId: "all",
   trustHistory: [],
 };
-
-function loadState(): StagingState {
-  if (typeof window === "undefined") return initial;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initial;
-    const parsed = JSON.parse(raw) as Partial<StagingState>;
-    const ids = new Set((parsed.views ?? []).map((v) => v.id));
-    const merged = [
-      ...BUILTIN_VIEWS.filter((v) => !ids.has(v.id)),
-      ...(parsed.views ?? []),
-    ];
-    return {
-      ...initial,
-      ...parsed,
-      parked: parsed.parked ?? SEED_PARKED,
-      views: merged,
-    } as StagingState;
-  } catch {
-    return initial;
-  }
-}
 
 interface StagingCtx extends StagingState {
   togglePin: (id: string) => void;
@@ -137,17 +115,27 @@ export function StagingProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StagingState>(initial);
 
   useEffect(() => {
-    setState(loadState());
+    Promise.all([getStagingPrefs(), getSavedViews()])
+      .then(([prefs, dbViews]) => {
+        const ids = new Set(dbViews.map((v) => v.id));
+        const merged = [...BUILTIN_VIEWS.filter((v) => !ids.has(v.id)), ...dbViews];
+        setState((s) => ({
+          ...s,
+          pinned: prefs.pinned,
+          manualRank: prefs.manualRank,
+          tags: prefs.tags,
+          notes: prefs.notes,
+          parked: prefs.parked,
+          views: merged,
+        }));
+      })
+      .catch(console.error);
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
 
   const togglePin = useCallback((id: string) => {
     setState((s) => {
       const now = !s.pinned[id];
+      upsertStagingPref({ data: { requestId: id, pinned: now } }).catch(console.error);
       return {
         ...s,
         pinned: { ...s.pinned, [id]: now },
@@ -163,6 +151,9 @@ export function StagingProvider({ children }: { children: ReactNode }) {
     setState((s) => {
       const next: Record<string, number> = { ...s.manualRank };
       orderedIds.forEach((id, idx) => (next[id] = idx));
+      orderedIds.forEach((id, idx) =>
+        upsertStagingPref({ data: { requestId: id, manualRank: idx } }).catch(console.error),
+      );
       return {
         ...s,
         manualRank: next,
@@ -176,6 +167,7 @@ export function StagingProvider({ children }: { children: ReactNode }) {
 
   const clearManualOrdering = useCallback(() => {
     setState((s) => ({ ...s, manualRank: {}, pinned: {} }));
+    clearManualOrderingFn().catch(console.error);
   }, []);
 
   const addTag = useCallback((id: string, tag: string) => {
@@ -184,9 +176,11 @@ export function StagingProvider({ children }: { children: ReactNode }) {
     setState((s) => {
       const existing = s.tags[id] ?? [];
       if (existing.includes(t)) return s;
+      const newTags = [...existing, t];
+      upsertStagingPref({ data: { requestId: id, tags: newTags } }).catch(console.error);
       return {
         ...s,
-        tags: { ...s.tags, [id]: [...existing, t] },
+        tags: { ...s.tags, [id]: newTags },
         trustHistory: [
           { ts: new Date().toISOString(), action: "tag" as const, requestId: id },
           ...s.trustHistory,
@@ -196,42 +190,64 @@ export function StagingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeTag = useCallback((id: string, tag: string) => {
-    setState((s) => ({
-      ...s,
-      tags: { ...s.tags, [id]: (s.tags[id] ?? []).filter((t) => t !== tag) },
-      trustHistory: [
-        { ts: new Date().toISOString(), action: "untag" as const, requestId: id },
-        ...s.trustHistory,
-      ].slice(0, 200),
-    }));
+    setState((s) => {
+      const newTags = (s.tags[id] ?? []).filter((t) => t !== tag);
+      upsertStagingPref({ data: { requestId: id, tags: newTags } }).catch(console.error);
+      return {
+        ...s,
+        tags: { ...s.tags, [id]: newTags },
+        trustHistory: [
+          { ts: new Date().toISOString(), action: "untag" as const, requestId: id },
+          ...s.trustHistory,
+        ].slice(0, 200),
+      };
+    });
   }, []);
 
   const setNote = useCallback((id: string, text: string) => {
-    setState((s) => ({
-      ...s,
-      notes: { ...s.notes, [id]: text },
-      trustHistory: text.trim()
-        ? [
-            { ts: new Date().toISOString(), action: "note" as const, requestId: id },
-            ...s.trustHistory,
-          ].slice(0, 200)
-        : s.trustHistory,
-    }));
+    setState((s) => {
+      upsertStagingPref({ data: { requestId: id, note: text } }).catch(console.error);
+      return {
+        ...s,
+        notes: { ...s.notes, [id]: text },
+        trustHistory: text.trim()
+          ? [
+              { ts: new Date().toISOString(), action: "note" as const, requestId: id },
+              ...s.trustHistory,
+            ].slice(0, 200)
+          : s.trustHistory,
+      };
+    });
   }, []);
 
   const parkRequest = useCallback((id: string, reason: ParkReason = "snoozed", note?: string) => {
-    setState((s) => ({
-      ...s,
-      parked: { ...s.parked, [id]: { reason, note, at: new Date().toISOString() } },
-      trustHistory: [
-        { ts: new Date().toISOString(), action: "park" as const, requestId: id },
-        ...s.trustHistory,
-      ].slice(0, 200),
-    }));
+    const parkedAt = new Date().toISOString();
+    setState((s) => {
+      upsertStagingPref({ data: {
+        requestId: id,
+        parkedReason: reason,
+        parkedNote: note ?? null,
+        parkedAt,
+      } }).catch(console.error);
+      return {
+        ...s,
+        parked: { ...s.parked, [id]: { reason, note, at: parkedAt } },
+        trustHistory: [
+          { ts: new Date().toISOString(), action: "park" as const, requestId: id },
+          ...s.trustHistory,
+        ].slice(0, 200),
+      };
+    });
   }, []);
 
   const unparkRequest = useCallback((id: string) => {
     setState((s) => {
+      upsertStagingPref({ data: {
+        requestId: id,
+        parkedReason: null,
+        parkedNote: null,
+        parkedAt: null,
+      } }).catch(console.error);
       const next = { ...s.parked };
       delete next[id];
       return {
@@ -245,19 +261,26 @@ export function StagingProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addView = useCallback((v: Omit<SavedView, "id">) => {
-    setState((s) => {
+  const addView = useCallback(
+    (v: Omit<SavedView, "id">) => {
       const id = `view-${Date.now()}`;
-      return { ...s, views: [...s.views, { scope: "spark", ...v, id }], activeViewId: id };
-    });
-  }, []);
+      setState((s) => {
+        upsertView({ data: { id, ...v, sortOrder: s.views.length } }).catch(console.error);
+        return { ...s, views: [...s.views, { scope: "spark", ...v, id }], activeViewId: id };
+      });
+    },
+    [],
+  );
 
   const removeView = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      views: s.views.filter((v) => v.id !== id || v.builtin),
-      activeViewId: s.activeViewId === id ? "all" : s.activeViewId,
-    }));
+    setState((s) => {
+      deleteViewFn({ data: { id } }).catch(console.error);
+      return {
+        ...s,
+        views: s.views.filter((v) => v.id !== id || v.builtin),
+        activeViewId: s.activeViewId === id ? "all" : s.activeViewId,
+      };
+    });
   }, []);
 
   const setActiveView = useCallback((id: string) => {
@@ -265,13 +288,16 @@ export function StagingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const recordAction = useCallback((e: Omit<TrustEvent, "ts">) => {
-    setState((s) => ({
-      ...s,
-      trustHistory: [
-        { ts: new Date().toISOString(), ...e },
-        ...s.trustHistory,
-      ].slice(0, 200),
-    }));
+    setState((s) => {
+      recordTrustEvent({ data: { action: e.action, requestId: e.requestId } }).catch(console.error);
+      return {
+        ...s,
+        trustHistory: [
+          { ts: new Date().toISOString(), ...e },
+          ...s.trustHistory,
+        ].slice(0, 200),
+      };
+    });
   }, []);
 
   const hasManualOrdering = useMemo(

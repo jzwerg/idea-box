@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { listRequests } from "@/lib/api/requests.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DropdownMenu,
@@ -49,7 +50,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import {
-  MOCK_REQUESTS,
   getClient,
   getApp,
   getRevenuePotential,
@@ -72,6 +72,7 @@ import { useStaging, matchesView, type GroupBy } from "@/lib/staging-context";
 import { buildProposedRule } from "@/lib/teach";
 
 export const Route = createFileRoute("/box")({
+  loader: () => listRequests(),
   head: () => ({
     meta: [
       { title: "Box — IdeaBox" },
@@ -121,7 +122,8 @@ const STAGES: Array<{
 ];
 
 function BoxPage() {
-  const [requests, setRequests] = useState<RequestRecord[]>(MOCK_REQUESTS);
+  const initialRequests = Route.useLoaderData();
+  const [requests, setRequests] = useState<RequestRecord[]>(initialRequests);
   const [stage, setStage] = useState<Stage>("shape");
   const [includeParked, setIncludeParked] = useState(false);
   const [pinnedOnly, setPinnedOnly] = useState(false);

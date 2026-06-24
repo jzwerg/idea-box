@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StagingRouteImport } from './routes/staging'
+import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as OutcomeRouteImport } from './routes/outcome'
 import { Route as BoxRouteImport } from './routes/box'
@@ -20,11 +21,17 @@ import { Route as IngestionIndexRouteImport } from './routes/ingestion.index'
 import { Route as SettingsSourcesRouteImport } from './routes/settings.sources'
 import { Route as SettingsAgentRouteImport } from './routes/settings.agent'
 import { Route as IngestionSourceIdRouteImport } from './routes/ingestion.$sourceId'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as SettingsSourcesSourceIdRouteImport } from './routes/settings.sources.$sourceId'
 
 const StagingRoute = StagingRouteImport.update({
   id: '/staging',
   path: '/staging',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -77,6 +84,11 @@ const IngestionSourceIdRoute = IngestionSourceIdRouteImport.update({
   path: '/ingestion/$sourceId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsSourcesSourceIdRoute = SettingsSourcesSourceIdRouteImport.update({
   id: '/$sourceId',
   path: '/$sourceId',
@@ -89,7 +101,9 @@ export interface FileRoutesByFullPath {
   '/box': typeof BoxRoute
   '/outcome': typeof OutcomeRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/signin': typeof SigninRoute
   '/staging': typeof StagingRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/settings/agent': typeof SettingsAgentRoute
   '/settings/sources': typeof SettingsSourcesRouteWithChildren
@@ -102,7 +116,9 @@ export interface FileRoutesByTo {
   '/agent': typeof AgentRoute
   '/box': typeof BoxRoute
   '/outcome': typeof OutcomeRoute
+  '/signin': typeof SigninRoute
   '/staging': typeof StagingRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/settings/agent': typeof SettingsAgentRoute
   '/settings/sources': typeof SettingsSourcesRouteWithChildren
@@ -117,7 +133,9 @@ export interface FileRoutesById {
   '/box': typeof BoxRoute
   '/outcome': typeof OutcomeRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/signin': typeof SigninRoute
   '/staging': typeof StagingRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/ingestion/$sourceId': typeof IngestionSourceIdRoute
   '/settings/agent': typeof SettingsAgentRoute
   '/settings/sources': typeof SettingsSourcesRouteWithChildren
@@ -133,7 +151,9 @@ export interface FileRouteTypes {
     | '/box'
     | '/outcome'
     | '/settings'
+    | '/signin'
     | '/staging'
+    | '/auth/callback'
     | '/ingestion/$sourceId'
     | '/settings/agent'
     | '/settings/sources'
@@ -146,7 +166,9 @@ export interface FileRouteTypes {
     | '/agent'
     | '/box'
     | '/outcome'
+    | '/signin'
     | '/staging'
+    | '/auth/callback'
     | '/ingestion/$sourceId'
     | '/settings/agent'
     | '/settings/sources'
@@ -160,7 +182,9 @@ export interface FileRouteTypes {
     | '/box'
     | '/outcome'
     | '/settings'
+    | '/signin'
     | '/staging'
+    | '/auth/callback'
     | '/ingestion/$sourceId'
     | '/settings/agent'
     | '/settings/sources'
@@ -175,7 +199,9 @@ export interface RootRouteChildren {
   BoxRoute: typeof BoxRoute
   OutcomeRoute: typeof OutcomeRoute
   SettingsRoute: typeof SettingsRouteWithChildren
+  SigninRoute: typeof SigninRoute
   StagingRoute: typeof StagingRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   IngestionSourceIdRoute: typeof IngestionSourceIdRoute
   IngestionIndexRoute: typeof IngestionIndexRoute
 }
@@ -187,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/staging'
       fullPath: '/staging'
       preLoaderRoute: typeof StagingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -259,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IngestionSourceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/sources/$sourceId': {
       id: '/settings/sources/$sourceId'
       path: '/$sourceId'
@@ -303,7 +343,9 @@ const rootRouteChildren: RootRouteChildren = {
   BoxRoute: BoxRoute,
   OutcomeRoute: OutcomeRoute,
   SettingsRoute: SettingsRouteWithChildren,
+  SigninRoute: SigninRoute,
   StagingRoute: StagingRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   IngestionSourceIdRoute: IngestionSourceIdRoute,
   IngestionIndexRoute: IngestionIndexRoute,
 }

@@ -7,7 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { WEIGHTS as DEFAULT_WEIGHTS } from "./mock-requests";
+import {
+  getAgentConfig,
+  saveAgentConfig,
+  getAgentRuns,
+  createAgentRun,
+  completeAgentRun,
+  getLearnedRules,
+  upsertLearnedRule,
+  deleteLearnedRule as deleteLearnedRuleFn,
+} from "./api/agent.functions";
 import type { TeachAction } from "./teach";
 
 export interface LearnedRule {
@@ -81,13 +90,25 @@ const DEFAULT_INSTRUCTIONS =
   "Prioritise requests tied to active enterprise deals, named revenue at risk, or imminent regulatory deadlines. Down-weight pure cosmetic asks unless reach is broad. Cluster duplicates and prefer those with multi-channel mentions.";
 
 export function AgentProvider({ children }: { children: ReactNode }) {
-  const [weights, setWeightsState] = useState<Weights>({ ...DEFAULT_WEIGHTS });
-  const [instructions, setInstructions] = useState<string>(DEFAULT_INSTRUCTIONS);
+  const [weights, setWeightsState] = useState<Weights>({ impact: 0.35, reach: 0.25, urgency: 0.20, effort: 0.20 });
+  const [instructions, setInstructionsState] = useState<string>(DEFAULT_INSTRUCTIONS);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [status, setStatus] = useState<"idle" | "running">("idle");
   const [learnedRules, setLearnedRules] = useState<LearnedRule[]>([]);
   const [pendingProposals, setPendingProposals] = useState<Proposal[]>([]);
   const applyRef = useRef<AgentApplyFn | null>(null);
+
+  // Load initial state from DB
+  useEffect(() => {
+    Promise.all([getAgentConfig(), getAgentRuns(), getLearnedRules()])
+      .then(([config, runs, rules]) => {
+        setWeightsState(config.weights);
+        if (config.instructions) setInstructionsState(config.instructions);
+        setRuns(runs);
+        setLearnedRules(rules);
+      })
+      .catch(console.error);
+  }, []);
 
   const proposeRule = useCallback((p: Omit<Proposal, "id" | "createdAt">) => {
     const proposal: Proposal = {
@@ -105,18 +126,24 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     setPendingProposals((arr) => {
       const p = arr.find((x) => x.id === id);
       if (p) {
-        setLearnedRules((rules) => [
-          {
-            id: `rule-${Date.now()}`,
-            rule: finalRule?.trim() || p.rule,
-            sourceAction: p.sourceAction,
-            sourceRequestId: p.sourceRequestId,
-            sourceTitle: p.sourceTitle,
-            createdAt: new Date().toISOString(),
-            enabled: true,
-          },
-          ...rules,
-        ]);
+        const newRule: LearnedRule = {
+          id: `rule-${Date.now()}`,
+          rule: finalRule?.trim() || p.rule,
+          sourceAction: p.sourceAction,
+          sourceRequestId: p.sourceRequestId,
+          sourceTitle: p.sourceTitle,
+          createdAt: new Date().toISOString(),
+          enabled: true,
+        };
+        setLearnedRules((rules) => [newRule, ...rules]);
+        upsertLearnedRule({ data: {
+          id: newRule.id,
+          rule: newRule.rule,
+          sourceAction: String(newRule.sourceAction),
+          sourceRequestId: newRule.sourceRequestId,
+          sourceTitle: newRule.sourceTitle,
+          enabled: true,
+        } }).catch(console.error);
       }
       return arr.filter((x) => x.id !== id);
     });
@@ -128,12 +155,25 @@ export function AgentProvider({ children }: { children: ReactNode }) {
 
   const toggleLearnedRule = useCallback((id: string) => {
     setLearnedRules((rs) =>
-      rs.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
+      rs.map((r) => {
+        if (r.id !== id) return r;
+        const updated = { ...r, enabled: !r.enabled };
+        upsertLearnedRule({ data: {
+          id: updated.id,
+          rule: updated.rule,
+          sourceAction: String(updated.sourceAction),
+          sourceRequestId: updated.sourceRequestId,
+          sourceTitle: updated.sourceTitle,
+          enabled: updated.enabled,
+        } }).catch(console.error);
+        return updated;
+      }),
     );
   }, []);
 
   const removeLearnedRule = useCallback((id: string) => {
     setLearnedRules((rs) => rs.filter((r) => r.id !== id));
+    deleteLearnedRuleFn({ data: { id } }).catch(console.error);
   }, []);
 
 
@@ -141,9 +181,18 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     applyRef.current = fn;
   }, []);
 
-  const setWeights = useCallback((w: Weights) => setWeightsState(w), []);
+  const setWeights = useCallback((w: Weights) => {
+    setWeightsState(w);
+    saveAgentConfig({ data: { weights: w, instructions } }).catch(console.error);
+  }, [instructions]);
+
+  const setInstructions = useCallback((s: string) => {
+    setInstructionsState(s);
+    saveAgentConfig({ data: { weights, instructions: s } }).catch(console.error);
+  }, [weights]);
+
   const resetWeights = useCallback(
-    () => setWeightsState({ ...DEFAULT_WEIGHTS }),
+    () => setWeightsState({ impact: 0.35, reach: 0.25, urgency: 0.20, effort: 0.20 }),
     [],
   );
 
@@ -169,6 +218,12 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         },
         ...rs,
       ]);
+      createAgentRun({ data: {
+        id,
+        trigger,
+        instructions: runInstructions,
+        weights: snapshot,
+      } }).catch(console.error);
 
       const duration = 1400 + Math.floor(Math.random() * 1600);
       const learnedText = learnedRules
@@ -198,6 +253,14 @@ export function AgentProvider({ children }: { children: ReactNode }) {
               : r,
           ),
         );
+        completeAgentRun({ data: {
+          id,
+          status: "success",
+          durationMs: duration,
+          rescored: result?.rescored ?? 0,
+          topMoverTitle: result?.topMover?.title,
+          topMoverDelta: result?.topMover?.delta,
+        } }).catch(console.error);
         setStatus("idle");
       }, duration);
     },
