@@ -1,6 +1,7 @@
 import { Auth } from "@auth/core";
 import GitHub from "@auth/core/providers/github";
 import Google from "@auth/core/providers/google";
+import Email from "@auth/core/providers/email";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
 import process from "node:process";
 
@@ -26,6 +27,19 @@ export function getAuthConfig() {
             Google({
               clientId: process.env.AUTH_GOOGLE_ID,
               clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+            }),
+          ]
+        : []),
+      // Dev magic-link: logs the sign-in URL to the server console instead of sending email.
+      // Enabled in all environments when AUTH_GITHUB_ID is absent, or always in dev.
+      ...(process.env.NODE_ENV !== "production"
+        ? [
+            Email({
+              sendVerificationRequest({ identifier, url }) {
+                console.log(
+                  `\n[DEV MAGIC LINK] Sign in as ${identifier}:\n  ${url}\n`,
+                );
+              },
             }),
           ]
         : []),
