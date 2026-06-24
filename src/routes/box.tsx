@@ -183,7 +183,7 @@ function BoxPage() {
   // Global Cmd/Ctrl+N shortcut to open quick-add
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+      if ((e.metaKey || e.ctrlKey) && e.key === "i") {
         e.preventDefault();
         setShowAdd(true);
       }
@@ -571,7 +571,7 @@ function BoxPage() {
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
             <span className="font-display">Add idea</span>
-            <kbd className="ml-0.5 rounded bg-primary-foreground/15 px-1 py-0.5 font-mono text-[10px] leading-none">⌘N</kbd>
+            <kbd className="ml-0.5 rounded bg-primary-foreground/15 px-1 py-0.5 font-mono text-[10px] leading-none">⌘I</kbd>
           </button>
         </div>
       </div>
@@ -706,6 +706,17 @@ function BoxPage() {
                         <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" disabled={selectedIds.size < 2} onClick={merge}>
                           <GitMerge className="h-3.5 w-3.5" /> Merge
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5 rounded-full text-muted-foreground hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
+                          onClick={() => openDelete(Array.from(selectedIds))}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkDismiss}>
+                          <Archive className="h-3.5 w-3.5" /> Dismiss
+                        </Button>
                         {!includeParked ? (
                           <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkPark}>
                             <MoonStar className="h-3.5 w-3.5" /> Park
@@ -715,27 +726,26 @@ function BoxPage() {
                             <ArchiveRestore className="h-3.5 w-3.5" /> Unpark
                           </Button>
                         )}
-                        <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkDismiss}>
-                          <Archive className="h-3.5 w-3.5" /> Dismiss
-                        </Button>
                         <Button size="sm" className="h-8 gap-1.5 rounded-full" onClick={() => openPush(Array.from(selectedIds))}>
                           <SendIcon className="h-3.5 w-3.5" /> Push to Jira
                         </Button>
                       </>
                     )}
                     {!isShape && (
-                      <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkReopen}>
-                        <RotateCcw className="h-3.5 w-3.5" /> Move to Shape
-                      </Button>
+                      <>
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkReopen}>
+                          <RotateCcw className="h-3.5 w-3.5" /> Move to Shape
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5 rounded-full text-muted-foreground hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
+                          onClick={() => openDelete(Array.from(selectedIds))}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </Button>
+                      </>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 rounded-full text-muted-foreground hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
-                      onClick={() => openDelete(Array.from(selectedIds))}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </Button>
                   </div>
                 </div>
               )}
