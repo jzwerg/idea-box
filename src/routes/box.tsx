@@ -34,7 +34,6 @@ import {
   Rocket,
   Pin,
   Plus,
-  StickyNote,
   Layers,
   type LucideIcon,
 } from "lucide-react";
@@ -577,7 +576,6 @@ function BoxPage() {
       </div>
 
 
-      {/* The Box — bordered surface that holds all stage content */}
       {/* The Box — bordered surface that holds all stage content */}
       <div className="px-6 pb-6">
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
