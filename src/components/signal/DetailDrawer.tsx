@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Send, User, ArrowUpRight } from "lucide-react";
+import { ExternalLink, Send, User, ArrowUpRight, Archive, Trash2 } from "lucide-react";
 import {
   compositeScore,
   WEIGHTS,
@@ -30,6 +30,7 @@ interface Props {
   onClose: () => void;
   onUpdate: (id: string, patch: Partial<RequestRecord>) => void;
   onDismiss: (id: string) => void;
+  onDelete: (ids: string[]) => void;
   onPush: (ids: string[]) => void;
 }
 
@@ -47,7 +48,7 @@ const REVENUE_TONE: Record<string, string> = {
   low: "text-muted-foreground border-border bg-muted/40",
 };
 
-export function DetailDrawer({ request, onClose, onUpdate, onDismiss, onPush }: Props) {
+export function DetailDrawer({ request, onClose, onUpdate, onDismiss, onDelete, onPush }: Props) {
   const [local, setLocal] = useState<RequestRecord | null>(request);
 
   useEffect(() => {
@@ -193,7 +194,20 @@ export function DetailDrawer({ request, onClose, onUpdate, onDismiss, onPush }: 
         </div>
 
         <div className="border-t border-border/60 bg-background/95 px-6 py-3 flex items-center justify-between gap-2 shrink-0">
-          <Button variant="ghost" onClick={() => onDismiss(local.id)}>Dismiss</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" className="gap-2" onClick={() => onDismiss(local.id)}>
+              <Archive className="h-4 w-4" strokeWidth={2} />
+              Dismiss
+            </Button>
+            <Button
+              variant="ghost"
+              className="gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+              onClick={() => onDelete([local.id])}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
+              Delete
+            </Button>
+          </div>
           <Button onClick={() => onPush([local.id])} className="gap-2">
             <Send className="h-4 w-4" strokeWidth={2.25} />
             Push to Jira

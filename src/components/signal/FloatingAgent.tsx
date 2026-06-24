@@ -147,6 +147,7 @@ export function FloatingAgent() {
         onClose={() => setOpenId(null)}
         onUpdate={() => {}}
         onDismiss={() => setOpenId(null)}
+        onDelete={() => setOpenId(null)}
         onPush={() => {}}
       />
     </>

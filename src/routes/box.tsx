@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { listRequests, createRequest } from "@/lib/api/requests.functions";
+import { listRequests, createRequest, deleteRequest } from "@/lib/api/requests.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ import {
   Search,
   GitMerge,
   Trash2,
+  Archive,
   Send as SendIcon,
   Users,
   RotateCcw,
@@ -69,6 +70,7 @@ import { StagingView } from "@/components/signal/StagingView";
 import { ViewsBar } from "@/components/signal/ViewsBar";
 import { ParkedBadge } from "@/components/signal/ParkedBadge";
 import { QuickAddModal } from "@/components/signal/QuickAddModal";
+import { DeleteConfirmModal } from "@/components/signal/DeleteConfirmModal";
 import { compositeWith, useAgent } from "@/lib/agent-context";
 import { useStaging, matchesView, type GroupBy } from "@/lib/staging-context";
 import { buildProposedRule } from "@/lib/teach";
@@ -136,6 +138,7 @@ function BoxPage() {
   const [pushTargets, setPushTargets] = useState<string[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
 
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
@@ -230,6 +233,26 @@ function BoxPage() {
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
     setRequests((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  };
+
+  const openDelete = (ids: string[]) => {
+    setDeleteTargetIds(ids);
+  };
+
+  const confirmDelete = () => {
+    const ids = deleteTargetIds;
+    setRequests((rs) => rs.filter((r) => !ids.includes(r.id)));
+    setSelectedIds((s) => {
+      const n = new Set(s);
+      ids.forEach((id) => n.delete(id));
+      return n;
+    });
+    setOpenId((id) => (id && ids.includes(id) ? null : id));
+    setDeleteTargetIds([]);
+    ids.forEach((id) =>
+      deleteRequest({ data: { id } }).catch(console.error),
+    );
+    toast.success(ids.length === 1 ? "Idea deleted" : `${ids.length} ideas deleted`);
   };
 
   const handleQuickAdd = (title: string, status: Status) => {
@@ -544,11 +567,11 @@ function BoxPage() {
           })}
           <button
             onClick={() => setShowAdd(true)}
-            title="Add idea (⌘N)"
             className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
             <span className="font-display">Add idea</span>
+            <kbd className="ml-0.5 rounded bg-primary-foreground/15 px-1 py-0.5 font-mono text-[10px] leading-none">⌘N</kbd>
           </button>
         </div>
       </div>
@@ -693,7 +716,7 @@ function BoxPage() {
                           </Button>
                         )}
                         <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={bulkDismiss}>
-                          <Trash2 className="h-3.5 w-3.5" /> Dismiss
+                          <Archive className="h-3.5 w-3.5" /> Dismiss
                         </Button>
                         <Button size="sm" className="h-8 gap-1.5 rounded-full" onClick={() => openPush(Array.from(selectedIds))}>
                           <SendIcon className="h-3.5 w-3.5" /> Push to Jira
@@ -705,6 +728,14 @@ function BoxPage() {
                         <RotateCcw className="h-3.5 w-3.5" /> Move to Shape
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 rounded-full text-muted-foreground hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
+                      onClick={() => openDelete(Array.from(selectedIds))}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </Button>
                   </div>
                 </div>
               )}
@@ -783,6 +814,7 @@ function BoxPage() {
         onClose={() => setOpenId(null)}
         onUpdate={update}
         onDismiss={dismiss}
+        onDelete={openDelete}
         onPush={openPush}
       />
       <PushJiraDialog
@@ -795,6 +827,12 @@ function BoxPage() {
         open={showAdd}
         onClose={() => setShowAdd(false)}
         onAdd={handleQuickAdd}
+      />
+      <DeleteConfirmModal
+        open={deleteTargetIds.length > 0}
+        count={deleteTargetIds.length}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTargetIds([])}
       />
     </SignalShell>
   );
