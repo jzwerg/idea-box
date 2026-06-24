@@ -3,10 +3,14 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  redirect,
   useRouter,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { getAuthSession } from "@/lib/api/auth.functions";
+
+const PUBLIC_PATHS = ["/signin", "/auth/callback"];
 
 import appCss from "../styles.css?url";
 import { SourcesProvider } from "@/lib/sources-context";
@@ -74,6 +78,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: async ({ location }) => {
+    if (PUBLIC_PATHS.some((p) => location.pathname.startsWith(p))) return;
+    const session = await getAuthSession();
+    if (!session) throw redirect({ to: "/signin" });
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

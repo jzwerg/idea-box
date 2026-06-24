@@ -1,7 +1,6 @@
--- Auth.js / @auth/supabase-adapter tables
--- Run this AFTER 001_initial_schema.sql
-
-create schema if not exists next_auth;
+-- Superseded: switched from Auth.js to Supabase Auth natively.
+-- No additional schema is needed. Supabase manages auth.users internally.
+select 1;
 
 grant usage  on schema next_auth to service_role;
 grant all    on all tables    in schema next_auth to service_role;
