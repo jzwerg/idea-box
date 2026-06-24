@@ -4,8 +4,13 @@
 
 ```bash
 npm run dev        # starts on http://localhost:8000  (not 3000)
+npm run build      # production build → .vercel/output/ (Vercel Build Output API)
 npx tsc --noEmit   # type check — run before every commit
 ```
+
+## Build
+
+`vite.config.ts` uses plain Vite + `@tanstack/react-start/plugin/vite` + Nitro directly (no Lovable wrapper). Nitro preset defaults to `vercel` (overridable via `NITRO_PRESET` env var). Build output lands in `.vercel/output/` — Vercel's Build Output API format, auto-detected on deploy.
 
 ## Stack
 
