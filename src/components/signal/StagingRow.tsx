@@ -43,6 +43,7 @@ interface Props {
   showCheckbox: boolean;
   draggable: boolean;
   parkedBadge?: React.ReactNode;
+  isNew?: boolean;
 }
 
 export function StagingRow({
@@ -54,6 +55,7 @@ export function StagingRow({
   showCheckbox,
   draggable,
   parkedBadge,
+  isNew,
 }: Props) {
   const { weights } = useAgent();
   const { pinned, togglePin } = useStaging();
@@ -90,7 +92,7 @@ export function StagingRow({
       ref={setNodeRef}
       style={style}
       className={`border-b cursor-pointer transition-colors ${
-        checked ? "bg-primary/5" : isPinned ? "bg-amber-500/[0.04]" : "hover:bg-accent/40"
+        isNew ? "idea-in" : checked ? "bg-primary/5" : isPinned ? "bg-amber-500/[0.04]" : "hover:bg-accent/40"
       }`}
       onClick={onOpen}
     >

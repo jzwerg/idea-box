@@ -1,10 +1,11 @@
-import { MessageSquare, Mail, Mic } from "lucide-react";
+import { MessageSquare, Mail, Mic, PenLine } from "lucide-react";
 import type { Source } from "@/lib/mock-requests";
 
 const META: Record<Source, { icon: typeof Mail; color: string }> = {
   Teams: { icon: MessageSquare, color: "text-chart-3" },
   Email: { icon: Mail, color: "text-chart-2" },
   "Read.AI": { icon: Mic, color: "text-chart-5" },
+  manual: { icon: PenLine, color: "text-muted-foreground" },
 };
 
 export function SourceBadge({ source, withLabel = true }: { source: Source; withLabel?: boolean }) {

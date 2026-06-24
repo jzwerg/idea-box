@@ -143,6 +143,16 @@
   --sidebar-ring: oklch(0.66 0.13 255);
 }
 
+@keyframes idea-in {
+  0%   { opacity: 0; background-color: oklch(0.52 0.13 255 / 0.15); }
+  60%  { opacity: 1; background-color: oklch(0.52 0.13 255 / 0.06); }
+  100% { opacity: 1; background-color: oklch(0.52 0.13 255 / 0); }
+}
+
+.idea-in {
+  animation: idea-in 0.7s ease-out both;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

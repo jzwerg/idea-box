@@ -34,6 +34,7 @@ const SOURCE_ICON: Record<Source, typeof Mail> = {
   Email: Mail,
   Teams: MessagesSquare,
   "Read.AI": Mic,
+  manual: Layers,
 };
 
 const MOCK_BATCHES: StagedBatch[] = [

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { listRequests } from "@/lib/api/requests.functions";
+import { listRequests, createRequest } from "@/lib/api/requests.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DropdownMenu,
@@ -32,6 +32,7 @@ import {
   Flag,
   Rocket,
   Pin,
+  Plus,
   StickyNote,
   Layers,
   type LucideIcon,
@@ -67,6 +68,7 @@ import { StagingRow } from "@/components/signal/StagingRow";
 import { StagingView } from "@/components/signal/StagingView";
 import { ViewsBar } from "@/components/signal/ViewsBar";
 import { ParkedBadge } from "@/components/signal/ParkedBadge";
+import { QuickAddModal } from "@/components/signal/QuickAddModal";
 import { compositeWith, useAgent } from "@/lib/agent-context";
 import { useStaging, matchesView, type GroupBy } from "@/lib/staging-context";
 import { buildProposedRule } from "@/lib/teach";
@@ -132,6 +134,8 @@ function BoxPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [pushOpen, setPushOpen] = useState(false);
   const [pushTargets, setPushTargets] = useState<string[]>([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState<ProductArea | "all">("all");
@@ -171,6 +175,18 @@ function BoxPage() {
     );
     io.observe(el);
     return () => io.disconnect();
+  }, []);
+
+  // Global Cmd/Ctrl+N shortcut to open quick-add
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+        e.preventDefault();
+        setShowAdd(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   useEffect(() => {
@@ -214,6 +230,25 @@ function BoxPage() {
 
   const update = (id: string, patch: Partial<RequestRecord>) => {
     setRequests((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  };
+
+  const handleQuickAdd = (title: string, status: Status) => {
+    const stageForStatus: Record<Status, Stage> = {
+      new: "shape",
+      reviewed: "shape",
+      shelve: "shelve",
+      launch: "launch",
+    };
+    createRequest({ data: { title, status } })
+      .then((newReq) => {
+        setRequests((rs) => [newReq, ...rs]);
+        setNewlyAddedId(newReq.id);
+        setStage(stageForStatus[status]);
+        setSelectedIds(new Set());
+        toast.success(`Added to ${stageForStatus[status]}`);
+        setTimeout(() => setNewlyAddedId(null), 700);
+      })
+      .catch(() => toast.error("Failed to add idea"));
   };
 
   const dismiss = (id: string) => {
@@ -507,6 +542,14 @@ function BoxPage() {
               </button>
             );
           })}
+          <button
+            onClick={() => setShowAdd(true)}
+            title="Add idea (⌘N)"
+            className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+            <span className="font-display">Add idea</span>
+          </button>
         </div>
       </div>
 
@@ -717,6 +760,7 @@ function BoxPage() {
                             onOpen={() => setOpenId(r.id)}
                             showCheckbox={true}
                             draggable={isShape && !includeParked}
+                            isNew={r.id === newlyAddedId}
                             parkedBadge={
                               isShape && parked[r.id] ? (
                                 <ParkedBadge info={parked[r.id]} onUnpark={() => unparkRequest(r.id)} />
@@ -746,6 +790,11 @@ function BoxPage() {
         onOpenChange={setPushOpen}
         requests={requests.filter((r) => pushTargets.includes(r.id))}
         onConfirm={confirmPush}
+      />
+      <QuickAddModal
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        onAdd={handleQuickAdd}
       />
     </SignalShell>
   );

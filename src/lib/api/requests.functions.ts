@@ -146,6 +146,84 @@ export const setJiraKey = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ── Create a request manually ─────────────────────────────────────────────────
+
+export const createRequest = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      title: z.string().min(1),
+      description: z.string().default(""),
+      status: z.enum(["new", "reviewed", "shelve", "launch"]).default("new"),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const request = getWebRequest();
+    await requireSession(request);
+    const db = getSupabaseAdmin();
+
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+
+    const row = {
+      id,
+      title: data.title.trim(),
+      description: data.description,
+      product_area: "Reporting",
+      primary_source: "manual",
+      frequency: 1,
+      confidence: 0.5,
+      user_type: "Compliance Officer",
+      status: data.status,
+      impact_value: 50,
+      impact_rationale: "",
+      reach_value: 50,
+      reach_rationale: "",
+      urgency_value: 50,
+      urgency_rationale: "",
+      effort_value: 50,
+      effort_rationale: "",
+      created_at: now,
+    };
+
+    const { error } = await db.from("requests").insert(row);
+    if (error) throw new Error(error.message);
+
+    return {
+      id,
+      title: row.title,
+      description: row.description,
+      productArea: "Reporting" as ProductArea,
+      primarySource: "manual" as Source,
+      frequency: 1,
+      confidence: 0.5,
+      userType: "Compliance Officer" as UserType,
+      status: data.status as Status,
+      priority: {
+        impact: { value: 50, rationale: "" },
+        reach: { value: 50, rationale: "" },
+        urgency: { value: 50, rationale: "" },
+        effort: { value: 50, rationale: "" },
+      },
+      mentions: [],
+      createdAt: now,
+    } satisfies RequestRecord;
+  });
+
+// ── Delete a request ──────────────────────────────────────────────────────────
+
+export const deleteRequest = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const request = getWebRequest();
+    await requireSession(request);
+    const db = getSupabaseAdmin();
+
+    await db.from("source_mentions").delete().eq("request_id", data.id);
+    const { error } = await db.from("requests").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ── Seed mock data (dev only) ─────────────────────────────────────────────────
 
 export const seedRequests = createServerFn({ method: "POST" }).handler(async () => {

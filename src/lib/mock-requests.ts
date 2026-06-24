@@ -1,4 +1,4 @@
-export type Source = "Teams" | "Email" | "Read.AI";
+export type Source = "Teams" | "Email" | "Read.AI" | "manual";
 export type UserType =
   | "Compliance Officer"
   | "Risk Analyst"
