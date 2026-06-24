@@ -16,18 +16,20 @@ Ideas flow through four stages:
 ## Tech Stack
 
 - **Framework:** [TanStack Start](https://tanstack.com/start) — React 19 SSR with file-based routing
+- **Auth / DB:** Supabase (Postgres + GitHub OAuth)
 - **UI:** Radix UI + shadcn components + Tailwind CSS 4
-- **State:** TanStack React Query + React Context
+- **State:** React Context + optimistic updates
 - **Drag & Drop:** dnd-kit
-- **Forms:** React Hook Form + Zod
-- **Build:** Vite + Bun
+- **Build:** Vite + Node
 
 ## Getting Started
 
 ```bash
-bun install
-bun run dev
+npm install
+npm run dev   # http://localhost:8000
 ```
+
+Copy `.env.local.example` to `.env.local` and fill in your Supabase credentials before running.
 
 ## Project Structure
 
