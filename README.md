@@ -57,6 +57,20 @@ Migrations live in `supabase/migrations/`. Point at a new Supabase project and r
 
 ---
 
+## Deploy
+
+Built to run on **Vercel + Supabase** — the natural home for an SSR web app:
+
+1. Create a Supabase project and run the migrations in `supabase/migrations/` in order.
+2. Import the repo into Vercel. The build outputs to `.vercel/output/` (Vercel Build Output API) and is auto-detected — no extra config.
+3. Set the Supabase URL/keys and GitHub OAuth env vars in the Vercel project settings.
+
+> 🔗 *Live demo: add your Vercel URL here once deployed.*
+
+Unlike the infrastructure projects in this portfolio — which run via `docker-compose up` and prove themselves in CI — IdeaBox is a hosted web app: click and try it.
+
+---
+
 ## Roadmap
 
 See [ITERATION_IDEAS.md](./ITERATION_IDEAS.md) — planned features include cross-pull deduplication, a graph-based brainstorm workspace, bi-directional Jira sync, and multi-workspace support.
